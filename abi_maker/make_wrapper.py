@@ -8,10 +8,7 @@ from pathlib import Path
 import re
 import shutil
 
-
 import inflection
-import requests
-from bs4 import BeautifulSoup
 
 from typing import Dict, List, Optional, Sequence, Tuple, Union, Callable, Any
 
