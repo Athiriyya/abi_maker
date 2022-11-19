@@ -1,0 +1,18 @@
+[tool.poetry]
+name = "abi_maker"
+version = "0.1.0"
+description = ""
+authors = ["Athiriyya <athiriyya@gmail.com>"]
+
+[tool.poetry.dependencies]
+python = "^3.9"
+beautifulsoup4 = "^4.11.1"
+web3 = "^5.30.0"
+inflection = "^0.5.1"
+
+[tool.poetry.dev-dependencies]
+pytest = "^5.2"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
