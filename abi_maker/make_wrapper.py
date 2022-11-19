@@ -29,16 +29,6 @@ SNAKE_CASE_RE_1 = re.compile(r'(.)([A-Z][a-z]+)')
 SNAKE_CASE_RE_2 = re.compile(r'([a-z0-9])([A-Z])')
 
 def main():
-
-    # ATH DEBUG
-    from projects.DFK.all_dfk_contracts import AllDfkContracts
-    contracts = AllDfkContracts('https://subnets.avax.network/defi-kingdoms/dfk-chain/rpc')
-    address = '0xa6c5Fc68727d83508884e3632EBa20f5f420A289'
-    quests = contracts.quest_core.get_account_active_quests(address)
-    print(quests)
-    return
-    # END DEBUG
-
     # args = parse_all_args()
     projects = [
         ('Evo', PACKAGE_DIR / 'EVO_ABIS.json'),
@@ -86,15 +76,6 @@ def write_classes_for_abis( project_name:str,
         path = write_contract_wrapper_module(contract_name, abi, address, superclass_name, contracts_dir)
         written_paths.append(path)
     
-    # Write all contracts to the __init__.py file so they can all be imported
-    # with `from contracts import *`
-    (contracts_dir / '__init__.py').touch()
-    init_path = (contracts_dir / '__init__.py')
-    module_names = ",\n".join([f"'{p.stem}'" for p in written_paths])
-    init_text = f'''__all__ = [\n{indent(module_names, INDENT)}\n]'''
-    init_path.write_text(init_text)
-    written_paths.append(init_path)
-
     return written_paths
 
 def write_contract_wrapper_module(contract_name:str, contract_dicts:Sequence[Dict], contract_address:HexAddress, superclass_name:str, super_dir:Path) -> Path:
@@ -116,23 +97,33 @@ def write_contract_wrapper_module(contract_name:str, contract_dicts:Sequence[Dic
     return contract_path
 
 def write_all_contracts_wrapper(project_name:str, contract_dicts:Sequence[Dict], contract_paths:Sequence[Path]) -> Path:
-    class_str = dedent(
-    f'''
-    #! /usr/bin/env python
-
-    from .contracts import *
-
-    class All{project_name.capitalize()}Contracts:
-        # TODO: we might want to change other traits, like gas fees or timeout
-        def __init__(self, rpc:str=None):   
-            self.rpc = rpc
-
-    '''
-    )
+    init_strs = []
+    import_strs = []
     for class_name, module_path in zip(contract_dicts.keys(), contract_paths):
         module_name = module_path.stem
         # class_str += indent(f'self.{module_name} = contracts.{module_name}.{class_name}(self.rpc)\n', INDENT*2)
-        class_str += indent(f'self.{module_name} = {module_name}.{class_name}(self.rpc)\n', INDENT*2)
+        import_strs.append(f'from .contracts.{module_name} import {class_name}')
+        init_strs.append(indent(f'self.{module_name} = {class_name}(self.rpc)', INDENT*2))
+
+    imports = '\n'.join(import_strs)
+    inits = '\n'.join(init_strs)
+
+    class_str = dedent(
+f'''
+#! /usr/bin/env python
+
+{imports}
+
+class All{project_name.capitalize()}Contracts:
+    # TODO: we might want to be able to specify other traits, like gas fees or timeout
+    def __init__(self, rpc:str=None):   
+        self.rpc = rpc
+
+{inits}
+
+'''
+)
+
     
     all_contract_path = PROJECTS_DIR / project_name / f'all_{project_name.lower()}_contracts.py'
     all_contract_path.write_text(class_str)

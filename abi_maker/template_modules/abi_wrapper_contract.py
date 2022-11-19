@@ -22,14 +22,14 @@ class ABIWrapperContract:
                  abi:str, 
                  rpc:str=None):
         self.rpc = rpc or DEFAULT_RPC
+        self.contract_address = contract_address
+        self.abi = abi
+
         # FIXME: when used by many contracts, this creates many identical w3 
         # instances, when only one is required, or when they could be lazily 
         # created. Combine or cache them?
         self.w3 = Web3(Web3.HTTPProvider(self.rpc))
         self.w3.middleware_onion.inject(geth_poa_middleware, layer=0)
-
-        self.abi = abi
-        self.contract_address = contract_address
         self.contract = self.w3.eth.contract(self.contract_address, abi=abi)
 
         # FIXME: self.get_dynamic_gas_fee() requires a network call and can be slow
