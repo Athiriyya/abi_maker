@@ -128,17 +128,23 @@ class All{project_name.capitalize()}Contracts:
 
 def python_class_str_for_contract_dicts(contract_name:str, 
                                         contract_dicts:Sequence[Dict], 
-                                        contract_address:HexAddress,
+                                        contract_address:Optional[HexAddress],
                                         abi_str:str, 
                                         superclass_module: str='abi_wrapper_contract',
                                         superclass_name:str = 'ABIWrapperContract' ) -> str:
+    # If contract_address is None/null, this is a token contract like ERC20
+    # where the address of the token will be supplied as well as normal args, 
+    # so a custom contract will be made for each call. 
+    custom_contract = (contract_address is None)
+    address_str = 'None' if custom_contract else f'"{contract_address}"'
+
     class_str = dedent(
     f'''
     from ..{superclass_module} import {superclass_name}
     from ..solidity_types import *
     from ..credentials import Credentials
     
-    CONTRACT_ADDRESS = "{contract_address}"
+    CONTRACT_ADDRESS = {address_str}
 
     ABI = """[
     {abi_str}
@@ -149,17 +155,55 @@ def python_class_str_for_contract_dicts(contract_name:str,
 
         def __init__(self, rpc:str=None):
             super().__init__(contract_address=CONTRACT_ADDRESS, abi=ABI, rpc=rpc)
-
     ''')
-    func_strs = [function_body(d) for d in contract_dicts]
+    func_strs = [function_body(d, custom_contract) for d in contract_dicts]
     # remove empty strs
     func_strs = [f for f in func_strs if f]
 
     class_str += f'\n'.join(func_strs)
     return class_str
 
-def function_body(function_dict:Dict) -> str:
+def python_token_class_str_for_contract_dicts(contract_name:str, 
+                                        contract_dicts:Sequence[Dict], 
+                                        # contract_address:Optional[HexAddress],
+                                        abi_str:str, 
+                                        superclass_module: str='abi_wrapper_contract',
+                                        superclass_name:str = 'ABIWrapperContract' ):
+    # FIXME: if contract_address is None/null, this is a token contract like ERC20
+    # where the address of the token will be supplied as well as normal args, 
+    # so a custom contract will be made for each call. Make a couple small tweaks
+    # to enable this.
+    class_str = dedent(
+    f'''
+    from ..{superclass_module} import {superclass_name}
+    from ..solidity_types import *
+    from ..credentials import Credentials
+    from web3.contract import Contract
+    
+    ABI = """[
+    {abi_str}
+    ]
+    """     
+
+    class {inflection.camelize(contract_name)}({superclass_name}):
+
+        def __init__(self, rpc:str=None):
+            super().__init__(contract_address=None, abi=ABI, rpc=rpc)
+
+    ''')
+    # FIXME: does this 
+    func_strs = [function_body(d) for d in contract_dicts]
+    # remove empty strs
+    func_strs = [f for f in func_strs if f]
+
+    class_str += f'\n'.join(func_strs)
+    return class_str    
+
+def function_body(function_dict:Dict, custom_contract=False) -> str:
+
     body = ''
+    if function_dict['type'] != 'function':
+        return body
     contract_func_name = function_dict.get('name')
     func_name = to_snake_case(contract_func_name)
 
@@ -177,19 +221,37 @@ def function_body(function_dict:Dict) -> str:
     solidity_args = increment_empty_args(solidity_args, 'a')
     solidity_args_str = ', '.join(solidity_args)
 
-    # We return 2 types of functions: contract calls & transactions
+    #NOTE: make sure this covers all the bases we need. I'm assuming
+    # that the only other option for 'stateMutability' is 'nonpayable', but I haven't verified this
+    # - Athiriyya 21 November 2022
+    is_view = function_dict['stateMutability'] in ('view', 'pure')
 
-    if function_dict['type'] == 'function': 
-        def_func = function_signature(function_dict)
-        if function_dict['stateMutability'] == 'view':
-            body = f'''{def_func}
-    return self.contract.functions.{contract_func_name}({solidity_args_str}).call()
-    '''
-        elif function_dict['stateMutability'] == 'nonpayable':
-            body = f'''{def_func}
-    tx = self.contract.functions.{contract_func_name}({solidity_args_str})
-    return self.send_transaction(tx, cred)
-    '''
+    # We return 2 types of functions: contract function calls & transactions,
+    # and we return slightly different functions for standard contracts vs
+    # currencies (like ERC20s) that create a contract object for each transaction
+    def_func = function_signature(function_dict, custom_contract=custom_contract)
+    if custom_contract:
+        if is_view:
+            body = dedent(f'''
+            {def_func}
+                contract = self.w3.eth.contract(contract_address, abi=self.abi)
+                return contract.functions.{contract_func_name}({solidity_args_str}).call()''')
+        else:
+            body = dedent(f'''
+            {def_func}
+                contract = self.w3.eth.contract(contract_address, abi=self.abi)
+                tx = contract.functions.{contract_func_name}({solidity_args_str})
+                return self.send_transaction(tx, cred)''')
+    else:
+        if is_view:
+            body = dedent(f'''
+            {def_func}
+                return self.contract.functions.{contract_func_name}({solidity_args_str}).call()''')
+        else:
+            body = dedent(f'''
+            {def_func}
+                tx = self.contract.functions.{contract_func_name}({solidity_args_str})
+                return self.send_transaction(tx, cred)''')
     return indent(body, INDENT)
 
 def solidity_arg_name_to_pep_8(arg_name:Optional[str]) -> str:
@@ -213,7 +275,7 @@ def increment_empty_args(args:Sequence[str], incr_char='a') -> List[str]:
         
     return args_out
 
-def function_signature(function_dict:Dict) -> str:
+def function_signature(function_dict:Dict, custom_contract=False) -> str:
     # TODO: add type hints
     contract_func_name = function_dict['name']
     func_name = to_snake_case(contract_func_name)
@@ -227,6 +289,9 @@ def function_signature(function_dict:Dict) -> str:
         return_type = ' -> TxReceipt'
     else:
         return_type = f' -> {get_output_types(function_dict["outputs"])}'
+
+    if custom_contract:
+        inputs.append('contract_address:address')
 
     substitute_arg_name = 'a'
     for arg_dict in function_dict['inputs']:
