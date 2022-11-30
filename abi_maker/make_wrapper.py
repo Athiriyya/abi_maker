@@ -234,12 +234,12 @@ def function_body(function_dict:Dict, custom_contract=False) -> str:
         if is_view:
             body = dedent(f'''
             {def_func}
-                contract = self.w3.eth.contract(contract_address, abi=self.abi)
+                contract = self.get_custom_contract(contract_address, abi=self.abi)
                 return contract.functions.{contract_func_name}({solidity_args_str}).call()''')
         else:
             body = dedent(f'''
             {def_func}
-                contract = self.w3.eth.contract(contract_address, abi=self.abi)
+                contract = self.get_custom_contract(contract_address, abi=self.abi)
                 tx = contract.functions.{contract_func_name}({solidity_args_str})
                 return self.send_transaction(tx, cred)''')
     else:
@@ -281,7 +281,7 @@ def function_signature(function_dict:Dict, custom_contract=False) -> str:
     func_name = to_snake_case(contract_func_name)
     inputs = ['self']
 
-    is_transaction = (function_dict['type'] == 'function' and function_dict['stateMutability'] == 'nonpayable')
+    is_transaction = (function_dict['type'] == 'function' and function_dict['stateMutability'] in ('nonpayable', 'payable'))
 
     # Transactions require a Credentials argument to sign with; add it
     if is_transaction:

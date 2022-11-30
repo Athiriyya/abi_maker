@@ -8,89 +8,119 @@ from web3.datastructures import AttributeDict
 from web3.middleware import geth_poa_middleware
 
 from .credentials import Credentials
-from .solidity_types import *
 
+from .solidity_types import *
+from web3.contract import Contract
 from typing import Dict, Tuple, Union, Optional, Any
 
-
-DEFAULT_RPC = '<<DEFAULT_RPC>>'
 DEFAULT_TIMEOUT = 30
+DEFAULT_MAX_GAS = 50
+DEFAULT_MAX_PRIORITY_GAS = 3
+
+W3_INSTANCES: Dict[str, Web3] = {}
 
 class ABIWrapperContract:
     def __init__(self, 
                  contract_address:Optional[address], 
-                 abi:str, 
-                 rpc:str=None):
-        self.rpc = rpc or DEFAULT_RPC
+                 abi:str,
+                 rpc:str,
+                 max_gas_gwei:float=DEFAULT_MAX_GAS,
+                 max_priority_gwei:float=DEFAULT_MAX_PRIORITY_GAS):
+        self.rpc = rpc
         self.contract_address = contract_address
         self.abi = abi
         self.contract = None
-
-        # FIXME: when used by many contracts, this creates many identical w3 
-        # instances, when only one is required, or when they could be lazily 
-        # created. Combine or cache them?
-        self.w3 = Web3(Web3.HTTPProvider(self.rpc))
-        self.w3.middleware_onion.inject(geth_poa_middleware, layer=0)
-        
-        if self.contract_address:
-            self.contract = self.w3.eth.contract(self.contract_address, abi=abi)
-        
-        # FIXME: self.get_dynamic_gas_fee() requires a network call and can be slow
-        # self.gas_price, self.gas = self.get_dynamic_gas_fee()
-        self.gas_price, self.gas = (0, 0)
-
+        self.nonces: Dict[address, int] = {}
         self.timeout = DEFAULT_TIMEOUT
-        self.nonce = 0
 
-    def fetch_nonce(self, address:address) -> int:
-        nonce = self.w3.eth.getTransactionCount( address, 'pending')
-        return nonce        
+        # This one superclass may be used by many contracts, who don't all need to
+        # create separate Web3 instances. Just use one per RPC
+        global W3_INSTANCES
+        w3 = W3_INSTANCES.get(self.rpc, None)
+        if not w3:
+            w3 = Web3(Web3.HTTPProvider(self.rpc))
+            w3.middleware_onion.inject(geth_poa_middleware, layer=0)
+            W3_INSTANCES[self.rpc] = w3
+        self.w3 = w3
+
+        self.max_gas_wei = self.w3.toWei(max_gas_gwei, 'gwei')
+        self.max_priority_wei = self.w3.toWei(max_priority_gwei, 'gwei')
+
+        if self.contract_address:
+            self.contract = self.w3.eth.contract(self.contract_address, abi=self.abi)
+
+    def get_nonce_and_update(self, address:address, force_fetch=False) -> int:
+        # We keep track of our own nonce, and only re-fetch it if a 'nonce too low'
+        # error gets thrown       
+        nonce = self.nonces.get(address, 0) 
+        if force_fetch or nonce == 0:
+            nonce = self.w3.eth.getTransactionCount( address, 'pending')
+
+        # Store the next nonce this address will use, and return the current one
+        self.nonces[address] = nonce + 1
+        return nonce
+
+    def get_gas_dict_and_update(self, address:address) -> Dict[str, float]:
+        nonce = self.get_nonce_and_update(address)
+         
+        legacy = False
+        if legacy:
+            # TODO: it's expensive to query for fees with every transaction. 
+            # Maybe query only once a minute?
+            gas, gas_price = self.get_legacy_gas_fee()
+            gas_dict = {'gas': gas, 'gasPrice':gas_price, 'nonce':nonce}
+        else:
+            gas_dict = {
+                'from': address, 
+                'maxFeePerGas': self.max_gas_wei, 
+                'maxPriorityFeePerGas': self.max_priority_wei, 
+                'nonce': nonce
+            }
+        return gas_dict
 
     def call_contract_function(self, function_name:str, *args) -> Any:
         contract_func = getattr(self.contract, function_name)
         return contract_func(*args).call()
 
+    def get_custom_contract(self, contract_address:address, abi:str=None) -> Contract:
+        # TODO: Many custom contracts for e.g. ERC20 tokens could
+        # be re-used by caching a contracts dictionary keyed by address
+        # For now, just return a new contract
+        abi = abi or self.abi
+        contract = self.w3.eth.contract(contract_address, abi=abi)
+        return contract
+
     def send_transaction(self,
                          tx,
                          cred:Credentials,
-                         wait_result=True,
-                         nonce=None,
-                         retry_on_low_nonce=True
-                        ) -> Union[TxReceipt, str]:
-        # We keep track of our own nonce, and only re-fetch it if a 'nonce too low'
-        # error gets thrown
-        if nonce is None:
-            nonce = self.nonce
-            self.nonce += 1
-            
-        # TODO: how often should we update the gas fee? For the moment, we do 
-        # it every time, but it's an extra blockchain access for every transaction,
-        self.gas_price, self.gas = self.get_dynamic_gas_fee()
-        tx_dict = tx.buildTransaction( { 'gas': self.gas, 'gasPrice': self.gas_price, 'nonce': nonce})        
+                         nonce=None
+                        ) -> Optional[TxReceipt]:
+
+        address = cred.address  
+        gas_dict = self.get_gas_dict_and_update(address)
+        tx_dict = tx.buildTransaction(gas_dict)    
         signed_tx = self.w3.eth.account.sign_transaction(tx_dict, private_key=cred.private_key)
         try:
             self.w3.eth.send_raw_transaction(signed_tx.rawTransaction)
 
         except Exception as e:
             if 'nonce too low' in str(e):
-                if retry_on_low_nonce:
-                    self.nonce = self.fetch_nonce(cred.address)
-                    return self.send_transaction( tx, cred, wait_result=wait_result )
+                nonce = self.get_nonce_and_update(address, force_fetch=True)
+                return self.send_transaction( tx, cred)
 
             traceback.print_exc()
             return None
 
-        if wait_result:
-            receipt = self.w3.eth.wait_for_transaction_receipt(
-                transaction_hash=signed_tx.hash,
-                poll_latency=1,
-                timeout=self.timeout,
-            )
-            return receipt
-        else:
-            return signed_tx.hash.hex()
+        receipt = self.w3.eth.wait_for_transaction_receipt(
+            transaction_hash=signed_tx.hash,
+            poll_latency=1,
+            timeout=self.timeout,
+        )
+        return receipt
 
-    def get_dynamic_gas_fee(self) ->Tuple[int, int]:
+    def get_legacy_gas_fee(self) ->Tuple[int, int]:
+        # See: https://web3py.readthedocs.io/en/stable/gas_price.html#gas-price-api
+        # Some transactions may require a gas dict with the keys {'gasPrice': x_wei, '': y_wei}
         block = self.w3.eth.getBlock("pending")
         base_gas = block.gasUsed + self.w3.toWei(50, 'gwei')
         gas_limit =block.gasLimit
