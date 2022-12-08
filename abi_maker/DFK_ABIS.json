@@ -16,7 +16,7 @@
             {"name": "viewUserAirdrops", "type": "function", "inputs": [{"name": "player", "type": "address", "internalType": "address"}], "outputs": [{"name": "", "type": "tuple[]", "components": [{"name": "tokenAddress", "type": "address", "internalType": "address"}, {"name": "amount", "type": "uint256", "internalType": "uint256"}, {"name": "time", "type": "uint256", "internalType": "uint256"}, {"name": "note", "type": "string", "internalType": "string"}], "internalType": "struct AirdropClaim.Drop[]"}], "stateMutability": "view"},
             {"name": "withdrawTokens", "type": "function", "inputs": [{"name": "_tokenAddress", "type": "address", "internalType": "address"}, {"name": "_recipient", "type": "address", "internalType": "address"}, {"name": "_amount", "type": "uint256", "internalType": "uint256"}], "outputs": [], "stateMutability": "nonpayable"}
         ],
-        "ADDRESSES": {
+        "ADDRESS": {
             "cv": "0x8AbEbcDBF5AF9FC602814Eabf6Fbf952acF682A2",
             "sd": ""
         }
@@ -41,7 +41,7 @@
             {"name": "togglePause", "type": "function", "inputs": [], "outputs": [], "stateMutability": "nonpayable"},
             {"name": "updatePotion", "type": "function", "inputs": [{"name": "_potionAddress", "type": "address", "internalType": "address"}, {"name": "_requiredResources", "type": "address[]", "internalType": "address[]"}, {"name": "_requiredQuantities", "type": "uint32[]", "internalType": "uint32[]"}, {"name": "_status", "type": "uint8", "internalType": "uint8"}], "outputs": [], "stateMutability": "nonpayable"}
         ],
-        "ADDRESSES": {
+        "ADDRESS": {
             "cv": "0x87CBa8F998F902f2fff990efFa1E261F35932e57",
             "sd": "0x696BECc6ddD5589a9a3Bb93fAc3A53D26b7cb819"
         }
@@ -76,7 +76,7 @@
             {"name": "transferOwnership", "type": "function", "inputs": [{"name": "newOwner", "type": "address", "internalType": "address"}], "outputs": [], "stateMutability": "nonpayable"},
             {"name": "userAuctions", "type": "function", "inputs": [{"name": "", "type": "address", "internalType": "address"}, {"name": "", "type": "uint256", "internalType": "uint256"}], "outputs": [{"name": "", "type": "uint256", "internalType": "uint256"}], "stateMutability": "view"}
         ],
-        "ADDRESSES": {
+        "ADDRESS": {
             "cv": "0x8101CfFBec8E045c3FAdC3877a1D30f97d301209",
             "sd": "0xA2cef1763e59198025259d76Ce8F9E60d27B17B5"
         }
@@ -97,7 +97,7 @@
             {"name": "setBridge", "type": "function", "inputs": [{"name": "token", "type": "address", "internalType": "address"}, {"name": "bridge", "type": "address", "internalType": "address"}], "outputs": [], "stateMutability": "nonpayable"},
             {"name": "transferOwnership", "type": "function", "inputs": [{"name": "newOwner", "type": "address", "internalType": "address"}], "outputs": [], "stateMutability": "nonpayable"}
         ],
-        "ADDRESSES": {
+        "ADDRESS": {
             "cv": "0x4b1F4C7981465F814c4A78d79be21558A60f57F2",
             "sd": ""
         }
@@ -131,7 +131,7 @@
             {"name": "transferFrom", "type": "function", "inputs": [{"name": "from", "type": "address", "internalType": "address"}, {"name": "to", "type": "address", "internalType": "address"}, {"name": "amount", "type": "uint256", "internalType": "uint256"}], "outputs": [{"name": "", "type": "bool", "internalType": "bool"}], "stateMutability": "nonpayable"},
             {"name": "unpause", "type": "function", "inputs": [], "outputs": [], "stateMutability": "nonpayable"}
         ],
-        "ADDRESSES": {
+        "ADDRESS": {
             "cv": "0x184223A0921B58F5a0ddFD6448d8b2715EcC87a7",
             "sd": ""
         }
@@ -164,7 +164,7 @@
             {"name": "withdrawNative", "type": "function", "inputs": [], "outputs": [], "stateMutability": "nonpayable"},
             {"type": "receive", "stateMutability": "payable"}
         ],
-        "ADDRESSES": {
+        "ADDRESS": {
             "cv": "0xABABB0A2c42274D0e81417B824CABca464F5c16C",
             "sd": ""
         }
@@ -194,7 +194,7 @@
             {"name": "unpause", "type": "function", "inputs": [], "outputs": [], "stateMutability": "nonpayable"},
             {"name": "waitBlocks", "type": "function", "inputs": [], "outputs": [{"name": "", "type": "uint256", "internalType": "uint256"}], "stateMutability": "view"}
         ],
-        "ADDRESSES": {
+        "ADDRESS": {
             "cv": "0x68f6C64786cfCb35108986041D1009c9d27bde22",
             "sd": "0x13cE9c99E8E2fcDe1632adA7B69b2eCf5BE8ED45"
         }
@@ -253,7 +253,7 @@
             {"name": "unlockedSupply", "type": "function", "inputs": [], "outputs": [{"name": "", "type": "uint256", "internalType": "uint256"}], "stateMutability": "view"},
             {"name": "updateMaxTransferAmountRate", "type": "function", "inputs": [{"name": "_maxTransferAmountRate", "type": "uint16", "internalType": "uint16"}], "outputs": [], "stateMutability": "nonpayable"}
         ],
-        "ADDRESSES": {
+        "ADDRESS": {
             "cv": "0x04b9dA42306B023f3572e106B11D82aAd9D32EBb",
             "sd": ""
         }
@@ -282,7 +282,7 @@
             {"name": "setTears", "type": "function", "inputs": [{"name": "_tearsAddress", "type": "address", "internalType": "address"}], "outputs": [], "stateMutability": "nonpayable"},
             {"name": "summonCrystal", "type": "function", "inputs": [{"name": "_summonerId", "type": "uint256", "internalType": "uint256"}, {"name": "_assistantId", "type": "uint256", "internalType": "uint256"}, {"name": "_summonerTears", "type": "uint16", "internalType": "uint16"}, {"name": "_assistantTears", "type": "uint16", "internalType": "uint16"}, {"name": "_enhancementStone", "type": "address", "internalType": "address"}, {"name": "_rarityBonusCharges", "type": "uint8", "internalType": "uint8"}], "outputs": [], "stateMutability": "nonpayable"}
         ],
-        "ADDRESSES": {
+        "ADDRESS": {
             "cv": "0x70908Fd7278aab183C7EfC4f3449184E98e2e305",
             "sd": ""
         }
@@ -341,7 +341,7 @@
             {"name": "startPrivateDuel", "type": "function", "inputs": [{"name": "_type", "type": "uint256", "internalType": "uint256"}, {"name": "_heroIds", "type": "uint256[]", "internalType": "uint256[]"}, {"name": "_opponent", "type": "address", "internalType": "address"}, {"name": "_background", "type": "uint8", "internalType": "uint8"}, {"name": "_stat", "type": "uint8", "internalType": "uint8"}], "outputs": [], "stateMutability": "nonpayable"},
             {"name": "init", "type": "function", "inputs": [{"name": "_heroCoreAddress", "type": "address", "internalType": "address"}, {"name": "_statScienceAddress", "type": "address", "internalType": "address"}, {"name": "_raffleWholesale", "type": "address", "internalType": "address"}, {"name": "_dfkGold", "type": "address", "internalType": "address"}, {"name": "_powerToken", "type": "address", "internalType": "address"}, {"name": "_goldPot", "type": "address", "internalType": "address"}], "outputs": [], "stateMutability": "nonpayable"}
         ],
-        "ADDRESSES": {
+        "ADDRESS": {
             "cv": "0xf724FE22b45D519D149477aA2eC5348Cee08Cae3",
             "sd": ""
         }
@@ -366,7 +366,7 @@
             {"name": "transfer", "type": "function", "inputs": [{"name": "recipient", "type": "address", "internalType": "address"}, {"name": "amount", "type": "uint256", "internalType": "uint256"}], "outputs": [{"name": "", "type": "bool", "internalType": "bool"}], "stateMutability": "nonpayable"},
             {"name": "transferFrom", "type": "function", "inputs": [{"name": "sender", "type": "address", "internalType": "address"}, {"name": "recipient", "type": "address", "internalType": "address"}, {"name": "amount", "type": "uint256", "internalType": "uint256"}], "outputs": [{"name": "", "type": "bool", "internalType": "bool"}], "stateMutability": "nonpayable"}
         ],
-        "ADDRESSES": {
+        "ADDRESS": {
             "cv": null,
             "sd": null
         }
@@ -387,7 +387,7 @@
             {"name": "userCrystals", "type": "function", "inputs": [{"name": "", "type": "address", "internalType": "address"}, {"name": "", "type": "uint256", "internalType": "uint256"}], "outputs": [{"name": "", "type": "uint256", "internalType": "uint256"}], "stateMutability": "view"},
             {"name": "vrf", "type": "function", "inputs": [{"name": "blockNumber", "type": "uint256", "internalType": "uint256"}], "outputs": [{"name": "result", "type": "bytes32", "internalType": "bytes32"}], "stateMutability": "view"}
         ],
-        "ADDRESSES": {
+        "ADDRESS": {
             "cv": "0xBd1f65e7f350C614d364AEFeB2d87F829b0E465d",
             "sd": ""
         }
@@ -415,7 +415,7 @@
             {"name": "startTime", "type": "function", "inputs": [], "outputs": [{"name": "", "type": "uint256", "internalType": "uint256"}], "stateMutability": "view"},
             {"name": "stones", "type": "function", "inputs": [{"name": "", "type": "uint256", "internalType": "uint256"}], "outputs": [{"name": "", "type": "address", "internalType": "address"}], "stateMutability": "view"}
         ],
-        "ADDRESSES": {
+        "ADDRESS": {
             "cv": "0x74934378840D77E36AeF1f031D301549b4e1a225",
             "sd": ""
         }
@@ -457,7 +457,7 @@
             {"name": "unpause", "type": "function", "inputs": [], "outputs": [], "stateMutability": "nonpayable"},
             {"name": "userAuctions", "type": "function", "inputs": [{"name": "", "type": "address", "internalType": "address"}, {"name": "", "type": "uint256", "internalType": "uint256"}], "outputs": [{"name": "", "type": "uint256", "internalType": "uint256"}], "stateMutability": "view"}
         ],
-        "ADDRESSES": {
+        "ADDRESS": {
             "cv": "0xc390fAA4C7f66E4D62E59C231D5beD32Ff77BEf0",
             "sd": "0x7F2B66DB2D02f642a9eb8d13Bc998d441DDe17A8"
         }
@@ -494,7 +494,7 @@
             {"name": "transferOwnership", "type": "function", "inputs": [{"name": "newOwner", "type": "address", "internalType": "address"}], "outputs": [], "stateMutability": "nonpayable"},
             {"type": "constructor", "inputs": [{"name": "initialLogic", "type": "address", "internalType": "address"}, {"name": "initialAdmin", "type": "address", "internalType": "address"}, {"name": "_data", "type": "bytes", "internalType": "bytes"}], "stateMutability": "payable"}
         ],
-        "ADDRESSES": {
+        "ADDRESS": {
             "cv": "0x739B1666c2956f601f095298132773074c3E184b",
             "sd": "0xEE258eF5F4338B37E9BA9dE6a56382AdB32056E2"
         }
@@ -539,7 +539,7 @@
             {"name": "unpause", "type": "function", "inputs": [], "outputs": [], "stateMutability": "nonpayable"},
             {"name": "updateHero", "type": "function", "inputs": [{"name": "_hero", "type": "tuple", "components": [{"name": "id", "type": "uint256", "internalType": "uint256"}, {"name": "summoningInfo", "type": "tuple", "components": [{"name": "summonedTime", "type": "uint256", "internalType": "uint256"}, {"name": "nextSummonTime", "type": "uint256", "internalType": "uint256"}, {"name": "summonerId", "type": "uint256", "internalType": "uint256"}, {"name": "assistantId", "type": "uint256", "internalType": "uint256"}, {"name": "summons", "type": "uint32", "internalType": "uint32"}, {"name": "maxSummons", "type": "uint32", "internalType": "uint32"}], "internalType": "struct IHeroTypes.SummoningInfo"}, {"name": "info", "type": "tuple", "components": [{"name": "statGenes", "type": "uint256", "internalType": "uint256"}, {"name": "visualGenes", "type": "uint256", "internalType": "uint256"}, {"name": "rarity", "type": "uint8", "internalType": "enum IHeroTypes.Rarity"}, {"name": "shiny", "type": "bool", "internalType": "bool"}, {"name": "generation", "type": "uint16", "internalType": "uint16"}, {"name": "firstName", "type": "uint32", "internalType": "uint32"}, {"name": "lastName", "type": "uint32", "internalType": "uint32"}, {"name": "shinyStyle", "type": "uint8", "internalType": "uint8"}, {"name": "class", "type": "uint8", "internalType": "uint8"}, {"name": "subClass", "type": "uint8", "internalType": "uint8"}], "internalType": "struct IHeroTypes.HeroInfo"}, {"name": "state", "type": "tuple", "components": [{"name": "staminaFullAt", "type": "uint256", "internalType": "uint256"}, {"name": "hpFullAt", "type": "uint256", "internalType": "uint256"}, {"name": "mpFullAt", "type": "uint256", "internalType": "uint256"}, {"name": "level", "type": "uint16", "internalType": "uint16"}, {"name": "xp", "type": "uint64", "internalType": "uint64"}, {"name": "currentQuest", "type": "address", "internalType": "address"}, {"name": "sp", "type": "uint8", "internalType": "uint8"}, {"name": "status", "type": "uint8", "internalType": "enum IHeroTypes.HeroStatus"}], "internalType": "struct IHeroTypes.HeroState"}, {"name": "stats", "type": "tuple", "components": [{"name": "strength", "type": "uint16", "internalType": "uint16"}, {"name": "intelligence", "type": "uint16", "internalType": "uint16"}, {"name": "wisdom", "type": "uint16", "internalType": "uint16"}, {"name": "luck", "type": "uint16", "internalType": "uint16"}, {"name": "agility", "type": "uint16", "internalType": "uint16"}, {"name": "vitality", "type": "uint16", "internalType": "uint16"}, {"name": "endurance", "type": "uint16", "internalType": "uint16"}, {"name": "dexterity", "type": "uint16", "internalType": "uint16"}, {"name": "hp", "type": "uint16", "internalType": "uint16"}, {"name": "mp", "type": "uint16", "internalType": "uint16"}, {"name": "stamina", "type": "uint16", "internalType": "uint16"}], "internalType": "struct IHeroTypes.HeroStats"}, {"name": "primaryStatGrowth", "type": "tuple", "components": [{"name": "strength", "type": "uint16", "internalType": "uint16"}, {"name": "intelligence", "type": "uint16", "internalType": "uint16"}, {"name": "wisdom", "type": "uint16", "internalType": "uint16"}, {"name": "luck", "type": "uint16", "internalType": "uint16"}, {"name": "agility", "type": "uint16", "internalType": "uint16"}, {"name": "vitality", "type": "uint16", "internalType": "uint16"}, {"name": "endurance", "type": "uint16", "internalType": "uint16"}, {"name": "dexterity", "type": "uint16", "internalType": "uint16"}, {"name": "hpSm", "type": "uint16", "internalType": "uint16"}, {"name": "hpRg", "type": "uint16", "internalType": "uint16"}, {"name": "hpLg", "type": "uint16", "internalType": "uint16"}, {"name": "mpSm", "type": "uint16", "internalType": "uint16"}, {"name": "mpRg", "type": "uint16", "internalType": "uint16"}, {"name": "mpLg", "type": "uint16", "internalType": "uint16"}], "internalType": "struct IHeroTypes.HeroStatGrowth"}, {"name": "secondaryStatGrowth", "type": "tuple", "components": [{"name": "strength", "type": "uint16", "internalType": "uint16"}, {"name": "intelligence", "type": "uint16", "internalType": "uint16"}, {"name": "wisdom", "type": "uint16", "internalType": "uint16"}, {"name": "luck", "type": "uint16", "internalType": "uint16"}, {"name": "agility", "type": "uint16", "internalType": "uint16"}, {"name": "vitality", "type": "uint16", "internalType": "uint16"}, {"name": "endurance", "type": "uint16", "internalType": "uint16"}, {"name": "dexterity", "type": "uint16", "internalType": "uint16"}, {"name": "hpSm", "type": "uint16", "internalType": "uint16"}, {"name": "hpRg", "type": "uint16", "internalType": "uint16"}, {"name": "hpLg", "type": "uint16", "internalType": "uint16"}, {"name": "mpSm", "type": "uint16", "internalType": "uint16"}, {"name": "mpRg", "type": "uint16", "internalType": "uint16"}, {"name": "mpLg", "type": "uint16", "internalType": "uint16"}], "internalType": "struct IHeroTypes.HeroStatGrowth"}, {"name": "professions", "type": "tuple", "components": [{"name": "mining", "type": "uint16", "internalType": "uint16"}, {"name": "gardening", "type": "uint16", "internalType": "uint16"}, {"name": "foraging", "type": "uint16", "internalType": "uint16"}, {"name": "fishing", "type": "uint16", "internalType": "uint16"}], "internalType": "struct IHeroTypes.HeroProfessions"}], "internalType": "struct IHeroTypes.Hero"}], "outputs": [], "stateMutability": "nonpayable"}
         ],
-        "ADDRESSES": {
+        "ADDRESS": {
             "cv": "0xEb9B61B145D6489Be575D3603F4a704810e143dF",
             "sd": "0x268CC8248FFB72Cd5F3e73A9a20Fa2FF40EfbA61"
         }
@@ -577,7 +577,7 @@
             {"name": "summonCrystal", "type": "function", "inputs": [{"name": "_summonerId", "type": "uint256", "internalType": "uint256"}, {"name": "_assistantId", "type": "uint256", "internalType": "uint256"}, {"name": "_summonerTears", "type": "uint16", "internalType": "uint16"}, {"name": "_assistantTears", "type": "uint16", "internalType": "uint16"}, {"name": "_enhancementStone", "type": "address", "internalType": "address"}], "outputs": [], "stateMutability": "nonpayable"},
             {"name": "summonCrystalWithAuction", "type": "function", "inputs": [{"name": "_summonerId", "type": "uint256", "internalType": "uint256"}, {"name": "_assistantId", "type": "uint256", "internalType": "uint256"}, {"name": "_summonerTears", "type": "uint16", "internalType": "uint16"}, {"name": "_assistantTears", "type": "uint16", "internalType": "uint16"}, {"name": "_enhancementStone", "type": "address", "internalType": "address"}, {"name": "_assistingAuctionAddress", "type": "address", "internalType": "address"}, {"name": "_hireAmount", "type": "uint256", "internalType": "uint256"}], "outputs": [], "stateMutability": "nonpayable"}
         ],
-        "ADDRESSES": {
+        "ADDRESS": {
             "cv": "0xBc36D18662Bb97F9e74B1EAA1B752aA7A44595A7",
             "sd": "0xb086584f476Ad21B40aF0672f385a67334A0b294"
         }
@@ -589,7 +589,7 @@
             {"name": "consumeItem", "type": "function", "inputs": [{"name": "_consumableAddress", "type": "address", "internalType": "address"}, {"name": "_heroId", "type": "uint256", "internalType": "uint256"}], "outputs": [], "stateMutability": "nonpayable"},
             {"name": "initialize", "type": "function", "inputs": [{"name": "_heroCoreAddress", "type": "address", "internalType": "address"}], "outputs": [], "stateMutability": "nonpayable"}
         ],
-        "ADDRESSES": {
+        "ADDRESS": {
             "cv": "0xc9A9F352Aa188f422A8f8902B547FB3E59D37210",
             "sd": "0xF78cA21d7Da3227457138714F5bEd08D2604A156"
         }
@@ -611,7 +611,7 @@
             {"name": "tradeItems", "type": "function", "inputs": [{"name": "", "type": "uint256", "internalType": "uint256"}], "outputs": [{"name": "id", "type": "uint256", "internalType": "uint256"}, {"name": "item", "type": "address", "internalType": "contract IInventoryItem"}, {"name": "buyPrice", "type": "uint256", "internalType": "uint256"}, {"name": "sellPrice", "type": "uint256", "internalType": "uint256"}, {"name": "status", "type": "uint8", "internalType": "uint8"}], "stateMutability": "view"},
             {"name": "updateTradeItem", "type": "function", "inputs": [{"name": "_itemAddress", "type": "address", "internalType": "address"}, {"name": "_buyPrice", "type": "uint256", "internalType": "uint256"}, {"name": "_sellPrice", "type": "uint256", "internalType": "uint256"}, {"name": "_status", "type": "uint8", "internalType": "uint8"}], "outputs": [], "stateMutability": "nonpayable"}
         ],
-        "ADDRESSES": {
+        "ADDRESS": {
             "cv": "0x0f85fdf6c561C42d6b46d0E27ea6Aa9Bf9476B3f",
             "sd": "0x3Eab8a8F71dDA3e6c907C74302B734805C4f3278"
         }
@@ -686,7 +686,7 @@
             {"name": "unlockedSupply", "type": "function", "inputs": [], "outputs": [{"name": "", "type": "uint256", "internalType": "uint256"}], "stateMutability": "view"},
             {"name": "updateMaxTransferAmountRate", "type": "function", "inputs": [{"name": "_maxTransferAmountRate", "type": "uint16", "internalType": "uint16"}], "outputs": [], "stateMutability": "nonpayable"}
         ],
-        "ADDRESSES": {
+        "ADDRESS": {
             "cv": "0x72Cb10C6bfA5624dD07Ef608027E366bd690048F",
             "sd": "0x30C103f8f5A3A732DFe2dCE1Cc9446f545527b43"
         }
@@ -726,7 +726,7 @@
             {"name": "unpause", "type": "function", "inputs": [], "outputs": [], "stateMutability": "nonpayable"},
             {"name": "userAuctions", "type": "function", "inputs": [{"name": "", "type": "address", "internalType": "address"}, {"name": "", "type": "uint256", "internalType": "uint256"}], "outputs": [{"name": "", "type": "uint256", "internalType": "uint256"}], "stateMutability": "view"}
         ],
-        "ADDRESSES": {
+        "ADDRESS": {
             "cv": "0x77D991987ca85214f9686131C58c1ABE4C93E547",
             "sd": ""
         }
@@ -772,7 +772,7 @@
             {"name": "unpause", "type": "function", "inputs": [], "outputs": [], "stateMutability": "nonpayable"},
             {"name": "updateLandRegion", "type": "function", "inputs": [{"name": "_landId", "type": "uint256", "internalType": "uint256"}, {"name": "_region", "type": "uint256", "internalType": "uint256"}, {"name": "_oldLandIndex", "type": "uint256", "internalType": "uint256"}], "outputs": [], "stateMutability": "nonpayable"}
         ],
-        "ADDRESSES": {
+        "ADDRESS": {
             "cv": "0xD5f5bE1037e457727e011ADE9Ca54d21c21a3F8A",
             "sd": "0x07520d5b2a7bf2DD0d48Bf08311Ac598F9ab4D4A"
         }
@@ -852,7 +852,7 @@
             {"name": "userInfo", "type": "function", "inputs": [{"name": "", "type": "uint256", "internalType": "uint256"}, {"name": "", "type": "address", "internalType": "address"}], "outputs": [{"name": "amount", "type": "uint256", "internalType": "uint256"}, {"name": "rewardDebt", "type": "uint256", "internalType": "uint256"}, {"name": "rewardDebtAtTimestamp", "type": "uint256", "internalType": "uint256"}, {"name": "lastWithdrawTimestamp", "type": "uint256", "internalType": "uint256"}, {"name": "firstDepositTimestamp", "type": "uint256", "internalType": "uint256"}, {"name": "timeDelta", "type": "uint256", "internalType": "uint256"}, {"name": "lastDepositTimestamp", "type": "uint256", "internalType": "uint256"}], "stateMutability": "view"},
             {"name": "withdraw", "type": "function", "inputs": [{"name": "_pid", "type": "uint256", "internalType": "uint256"}, {"name": "_amount", "type": "uint256", "internalType": "uint256"}], "outputs": [], "stateMutability": "nonpayable"}
         ],
-        "ADDRESSES": {
+        "ADDRESS": {
             "cv": "0x57Dec9cC7f492d6583c773e2E7ad66dcDc6940Fb",
             "sd": "0xad2ea7b7e49be15918E4917736E86ff7feA57a6A"
         }
@@ -889,7 +889,7 @@
             {"name": "startMeditation", "type": "function", "inputs": [{"name": "_heroId", "type": "uint256", "internalType": "uint256"}, {"name": "_primaryStat", "type": "uint8", "internalType": "uint8"}, {"name": "_secondaryStat", "type": "uint8", "internalType": "uint8"}, {"name": "_tertiaryStat", "type": "uint8", "internalType": "uint8"}, {"name": "_attunementCrystal", "type": "address", "internalType": "address"}], "outputs": [], "stateMutability": "nonpayable"},
             {"name": "unpause", "type": "function", "inputs": [], "outputs": [], "stateMutability": "nonpayable"}
         ],
-        "ADDRESSES": {
+        "ADDRESS": {
             "cv": "0xD507b6b299d9FC835a0Df92f718920D13fA49B47",
             "sd": "0xdbEE8C336B06f2d30a6d2bB3817a3Ae0E34f4900"
         }
@@ -908,7 +908,7 @@
             {"name": "releasePet", "type": "function", "inputs": [{"name": "_holder", "type": "address", "internalType": "address"}, {"name": "_petId", "type": "uint256", "internalType": "uint256"}, {"name": "_releaseReason", "type": "string", "internalType": "string"}, {"name": "_previousOwner", "type": "address", "internalType": "address"}], "outputs": [], "stateMutability": "nonpayable"},
             {"name": "releasedPets", "type": "function", "inputs": [{"name": "", "type": "uint256", "internalType": "uint256"}], "outputs": [{"name": "id", "type": "uint256", "internalType": "uint256"}, {"name": "petId", "type": "uint256", "internalType": "uint256"}, {"name": "releaseTime", "type": "uint64", "internalType": "uint64"}, {"name": "releaseReason", "type": "string", "internalType": "string"}, {"name": "previousOwner", "type": "address", "internalType": "address"}], "stateMutability": "view"}
         ],
-        "ADDRESSES": {
+        "ADDRESS": {
             "cv": "0xE959cbddB8616BDFFa5464279664CCbb9EA10317",
             "sd": "0x4aBb1cDe7a0C55850495E80E1806993b1B92F742"
         }
@@ -948,7 +948,7 @@
             {"name": "unpause", "type": "function", "inputs": [], "outputs": [], "stateMutability": "nonpayable"},
             {"name": "userAuctions", "type": "function", "inputs": [{"name": "", "type": "address", "internalType": "address"}, {"name": "", "type": "uint256", "internalType": "uint256"}], "outputs": [{"name": "", "type": "uint256", "internalType": "uint256"}], "stateMutability": "view"}
         ],
-        "ADDRESSES": {
+        "ADDRESS": {
             "cv": "0x72F860bF73ffa3FC42B97BbcF43Ae80280CFcdc3",
             "sd": "0x7aB1C574A8762bEde901F32670481c0427DdF626"
         }
@@ -989,7 +989,7 @@
             {"name": "unpause", "type": "function", "inputs": [], "outputs": [], "stateMutability": "nonpayable"},
             {"name": "updatePet", "type": "function", "inputs": [{"name": "_pet", "type": "tuple", "components": [{"name": "id", "type": "uint256", "internalType": "uint256"}, {"name": "originId", "type": "uint8", "internalType": "uint8"}, {"name": "name", "type": "string", "internalType": "string"}, {"name": "season", "type": "uint8", "internalType": "uint8"}, {"name": "eggType", "type": "uint8", "internalType": "uint8"}, {"name": "rarity", "type": "uint8", "internalType": "uint8"}, {"name": "element", "type": "uint8", "internalType": "uint8"}, {"name": "bonusCount", "type": "uint8", "internalType": "uint8"}, {"name": "profBonus", "type": "uint8", "internalType": "uint8"}, {"name": "profBonusScalar", "type": "uint8", "internalType": "uint8"}, {"name": "craftBonus", "type": "uint8", "internalType": "uint8"}, {"name": "craftBonusScalar", "type": "uint8", "internalType": "uint8"}, {"name": "combatBonus", "type": "uint8", "internalType": "uint8"}, {"name": "combatBonusScalar", "type": "uint8", "internalType": "uint8"}, {"name": "appearance", "type": "uint16", "internalType": "uint16"}, {"name": "background", "type": "uint8", "internalType": "uint8"}, {"name": "shiny", "type": "uint8", "internalType": "uint8"}, {"name": "hungryAt", "type": "uint64", "internalType": "uint64"}, {"name": "equippableAt", "type": "uint64", "internalType": "uint64"}, {"name": "equippedTo", "type": "uint256", "internalType": "uint256"}], "internalType": "struct Pet"}], "outputs": [], "stateMutability": "nonpayable"}
         ],
-        "ADDRESSES": {
+        "ADDRESS": {
             "cv": "0xAC9AFb5900C8A27B766bCad3A37423DC0F4C22d3",
             "sd": "0x6362b205b539afb5FC369277365441c1dC6fAa28"
         }
@@ -1017,7 +1017,7 @@
             {"name": "totalExchanges", "type": "function", "inputs": [], "outputs": [{"name": "", "type": "uint256", "internalType": "uint256"}], "stateMutability": "view"},
             {"name": "unpause", "type": "function", "inputs": [], "outputs": [], "stateMutability": "nonpayable"}
         ],
-        "ADDRESSES": {
+        "ADDRESS": {
             "cv": "0xeaF833A0Ae97897f6F69a728C9c17916296cecCA",
             "sd": "0xe5D563F7e4144955FCFa8b90da45825426a05bD4"
         }
@@ -1050,7 +1050,7 @@
             {"name": "totalEggs", "type": "function", "inputs": [], "outputs": [{"name": "", "type": "uint256", "internalType": "uint256"}], "stateMutability": "view"},
             {"name": "unpause", "type": "function", "inputs": [], "outputs": [], "stateMutability": "nonpayable"}
         ],
-        "ADDRESSES": {
+        "ADDRESS": {
             "cv": "0x576C260513204392F0eC0bc865450872025CB1cA",
             "sd": "0x22e656419Be8A0abf0B53D0941FfDC3B70Fea36e"
         }
@@ -1087,7 +1087,7 @@
             {"name": "setPicMax", "type": "function", "inputs": [{"name": "_max", "type": "uint8", "internalType": "uint8"}], "outputs": [], "stateMutability": "nonpayable"},
             {"name": "setPicURI", "type": "function", "inputs": [{"name": "_picId", "type": "uint256", "internalType": "uint256"}, {"name": "_picUri", "type": "string", "internalType": "string"}], "outputs": [], "stateMutability": "nonpayable"}
         ],
-        "ADDRESSES": {
+        "ADDRESS": {
             "cv": "0x6391F796D56201D279a42fD3141aDa7e26A3B4A5",
             "sd": "0xe1b8C354BE50357c2ab90A962254526d08aF0D2D"
         }
@@ -1133,7 +1133,7 @@
             {"name": "startQuest", "type": "function", "inputs": [{"name": "_heroIds", "type": "uint256[]", "internalType": "uint256[]"}, {"name": "_questAddress", "type": "address", "internalType": "address"}, {"name": "_attempts", "type": "uint8", "internalType": "uint8"}, {"name": "_level", "type": "uint8", "internalType": "uint8"}], "outputs": [], "stateMutability": "nonpayable"},
             {"name": "timePerStamina", "type": "function", "inputs": [], "outputs": [{"name": "", "type": "uint256", "internalType": "uint256"}], "stateMutability": "view"}
         ],
-        "ADDRESSES": {
+        "ADDRESS": {
             "cv": "0xE9AbfBC143d7cef74b5b793ec5907fa62ca53154",
             "sd": "0x8dc58d6327E1f65b18B82EDFb01A361f3AAEf624"
         }
@@ -1186,7 +1186,7 @@
             {"name": "totalRaffles", "type": "function", "inputs": [], "outputs": [{"name": "", "type": "uint256", "internalType": "uint256"}], "stateMutability": "view"},
             {"name": "unpause", "type": "function", "inputs": [], "outputs": [], "stateMutability": "nonpayable"}
         ],
-        "ADDRESSES": {
+        "ADDRESS": {
             "cv": "0x6a56222A67df18FC282CD58dCDF12e61Be812f97",
             "sd": ""
         }
@@ -1220,7 +1220,7 @@
             {"name": "transferFrom", "type": "function", "inputs": [{"name": "from", "type": "address", "internalType": "address"}, {"name": "to", "type": "address", "internalType": "address"}, {"name": "amount", "type": "uint256", "internalType": "uint256"}], "outputs": [{"name": "", "type": "bool", "internalType": "bool"}], "stateMutability": "nonpayable"},
             {"name": "unpause", "type": "function", "inputs": [], "outputs": [], "stateMutability": "nonpayable"}
         ],
-        "ADDRESSES": {
+        "ADDRESS": {
             "cv": "0xBbd7c4Be2e54fF5e013471162e1ABAD7AB74c3C3",
             "sd": ""
         }
@@ -1252,7 +1252,7 @@
             {"name": "varOpenTime", "type": "function", "inputs": [], "outputs": [{"name": "", "type": "uint256", "internalType": "uint256"}], "stateMutability": "view"},
             {"name": "workingUntil", "type": "function", "inputs": [], "outputs": [{"name": "", "type": "uint256", "internalType": "uint256"}], "stateMutability": "view"}
         ],
-        "ADDRESSES": {
+        "ADDRESS": {
             "cv": "0xc32A0e963e50AAAED273A75425fC39902b0d0b3b",
             "sd": ""
         }
@@ -1277,7 +1277,7 @@
             {"name": "setPicChangeFee", "type": "function", "inputs": [{"name": "_fee", "type": "uint256", "internalType": "uint256"}], "outputs": [], "stateMutability": "nonpayable"},
             {"name": "togglePause", "type": "function", "inputs": [], "outputs": [], "stateMutability": "nonpayable"}
         ],
-        "ADDRESSES": {
+        "ADDRESS": {
             "cv": "0x8f1CeD3ABa6893E65DE59452C466B2CBb7Cd690b",
             "sd": "0x2dB164A65BB10BBbde7Aa441EAfDAED67AbE08EE"
         }
@@ -1299,7 +1299,7 @@
             {"name": "totalVested", "type": "function", "inputs": [{"name": "_recipient", "type": "address", "internalType": "address"}], "outputs": [{"name": "", "type": "uint256", "internalType": "uint256"}], "stateMutability": "view"},
             {"name": "updateDisbursement", "type": "function", "inputs": [{"name": "_disbursementId", "type": "uint256", "internalType": "uint256"}, {"name": "_reduction", "type": "uint256", "internalType": "uint256"}, {"name": "_startTime", "type": "uint64", "internalType": "uint64"}, {"name": "_duration", "type": "uint64", "internalType": "uint64"}], "outputs": [], "stateMutability": "nonpayable"}
         ],
-        "ADDRESSES": {
+        "ADDRESS": {
             "cv": "0x123165B3a30fdA3655B30cfC10135C1CA3C21bFC",
             "sd": ""
         }
@@ -1318,7 +1318,7 @@
             {"name": "setFeeTo", "type": "function", "inputs": [{"name": "_feeTo", "type": "address", "internalType": "address"}], "outputs": [], "stateMutability": "nonpayable"},
             {"name": "setFeeToSetter", "type": "function", "inputs": [{"name": "_feeToSetter", "type": "address", "internalType": "address"}], "outputs": [], "stateMutability": "nonpayable"}
         ],
-        "ADDRESSES": {
+        "ADDRESS": {
             "cv": "0x794C07912474351b3134E6D6B3B7b3b4A07cbAAa",
             "sd": "0x36fAE766e51f17F8218C735f58426E293498Db2B"
         }
@@ -1352,7 +1352,7 @@
             {"name": "swapTokensForExactTokens", "type": "function", "inputs": [{"name": "amountOut", "type": "uint256", "internalType": "uint256"}, {"name": "amountInMax", "type": "uint256", "internalType": "uint256"}, {"name": "path", "type": "address[]", "internalType": "address[]"}, {"name": "to", "type": "address", "internalType": "address"}, {"name": "deadline", "type": "uint256", "internalType": "uint256"}], "outputs": [{"name": "amounts", "type": "uint256[]", "internalType": "uint256[]"}], "stateMutability": "nonpayable"},
             {"type": "receive", "stateMutability": "payable"}
         ],
-        "ADDRESSES": {
+        "ADDRESS": {
             "cv": "0x3C351E1afdd1b1BC44e931E12D4E05D6125eaeCa",
             "sd": "0x9e987E5E9aB872598f601BE4aCC5ac23F484845E"
         }
@@ -1404,7 +1404,7 @@
             {"name": "validators", "type": "function", "inputs": [{"name": "", "type": "uint256", "internalType": "uint256"}], "outputs": [{"name": "", "type": "address", "internalType": "address"}], "stateMutability": "view"},
             {"type": "receive", "stateMutability": "payable"}
         ],
-        "ADDRESSES": {
+        "ADDRESS": {
             "cv": "0xED6dC9FD092190C08e4afF8611496774Ded19D54",
             "sd": ""
         }
