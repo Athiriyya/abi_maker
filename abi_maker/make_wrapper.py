@@ -429,9 +429,13 @@ def make_ordered_dict(d: Union[List, Dict], exclude_role_funcs=True) -> Union[Li
     if isinstance(d, list):
         if exclude_role_funcs:
             new_list = list([make_ordered_dict(d2, exclude_role_funcs) for d2 in d if not is_role_func(d2)])
-            return new_list
         else:
-            return list([make_ordered_dict(d2, exclude_role_funcs) for d2 in d])
+            new_list = list([make_ordered_dict(d2, exclude_role_funcs) for d2 in d])
+        # Sort list entries alphabetically. In practice, this ends up sorting by
+        # method names, which has the side effect of separating Solidity events 
+        # (which start with a capital letter) from Solidity functions
+        return sorted(new_list, key=lambda d:str(d))
+        
     elif isinstance(d, dict):
         # Output a new dictionary with `priority_keys` first if present, 
         # then all other keys sorted alphabetically
