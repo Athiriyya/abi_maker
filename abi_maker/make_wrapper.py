@@ -68,21 +68,36 @@ def write_classes_for_abis( project_name:str,
     # superclass_name = f'{project_name.capitalize()}Contract'
     superclass_name = 'ABIWrapperContract'
     for contract_name, contract_info in abis_by_name.items():
-        address = contract_info['ADDRESS']
+        # Note that this address may be a single hex address or a dict of addresses
+        # for multi-chain contracts
+        address = contract_info.get('ADDRESS')
         abi = contract_info['ABI']
         path = write_contract_wrapper_module(contract_name, abi, address, superclass_name, contracts_dir)
         written_paths.append(path)
     
     return written_paths
 
-def write_contract_wrapper_module(contract_name:str, contract_dicts:Sequence[Dict], contract_address:HexAddress, superclass_name:str, super_dir:Path) -> Path:
+def write_contract_wrapper_module(contract_name:str, 
+                                  contract_dicts:Sequence[Dict], 
+                                  contract_address:Union[HexAddress, Dict[str, HexAddress]], 
+                                  superclass_name:str, 
+                                  super_dir:Path) -> Path:
 
-    # TODO: add named addresses for different networks, testnets, etc
     abi_str = ',\n    '.join((json.dumps(d) for d in contract_dicts))
     abi_str = indent(abi_str, INDENT)
 
     superclass_module = to_snake_case(superclass_name)
-    module_str = python_class_str_for_contract_dicts(contract_name, 
+    # If we have one or more different addresses a contract could use, use
+    # a multichain version
+    if isinstance(contract_address, HexAddress):
+        module_str = python_class_str_for_contract_dicts(contract_name, 
+                                                    contract_dicts, 
+                                                    contract_address, 
+                                                    abi_str,
+                                                    superclass_module,
+                                                    superclass_name)
+    elif isinstance(contract_address, dict):
+        module_str = python_class_str_for_contract_dicts_multichain(contract_name, 
                                                     contract_dicts, 
                                                     contract_address, 
                                                     abi_str,
@@ -93,14 +108,28 @@ def write_contract_wrapper_module(contract_name:str, contract_dicts:Sequence[Dic
     contract_path.write_text(module_str)
     return contract_path
 
-def write_all_contracts_wrapper(project_name:str, contract_dicts:Sequence[Dict], contract_paths:Sequence[Path]) -> Path:
+def write_all_contracts_wrapper(project_name:str, 
+                                contract_dicts:Sequence[Dict], 
+                                contract_paths:Sequence[Path]) -> Path:
     init_strs = []
     import_strs = []
+
+    # Figure out if this is a multichain contract
+    single_dict = next(iter(contract_dicts.values()))
+    is_multichain = isinstance(single_dict.get('ADDRESS'), dict)
+    chain_arg = ''
+    chain_type_arg = ''
+    chain_self = ''
+    if is_multichain:
+        chain_arg = 'self.chain_key, '
+        chain_type_arg = 'chain_key:str, '
+        chain_self = '\n        self.chain_key = chain_key'
+
+
     for class_name, module_path in zip(contract_dicts.keys(), contract_paths):
         module_name = module_path.stem
-        # class_str += indent(f'self.{module_name} = contracts.{module_name}.{class_name}(self.rpc)\n', INDENT*2)
         import_strs.append(f'from .contracts.{module_name} import {class_name}')
-        init_strs.append(indent(f'self.{module_name} = {class_name}(self.rpc)', INDENT*2))
+        init_strs.append(indent(f'self.{module_name} = {class_name}({chain_arg}self.rpc)', INDENT*2))
 
     imports = '\n'.join(import_strs)
     inits = '\n'.join(init_strs)
@@ -113,8 +142,8 @@ f'''
 
 class All{project_name.capitalize()}Contracts:
     # TODO: we might want to be able to specify other traits, like gas fees or timeout
-    def __init__(self, rpc:str=None):   
-        self.rpc = rpc
+    def __init__(self, {chain_type_arg}rpc:str=None):   
+        self.rpc = rpc{chain_self}
 
 {inits}
 
@@ -125,6 +154,44 @@ class All{project_name.capitalize()}Contracts:
     all_contract_path = PROJECTS_DIR / project_name / f'all_{project_name.lower()}_contracts.py'
     all_contract_path.write_text(class_str)
     return all_contract_path
+
+def python_class_str_for_contract_dicts_multichain(contract_name:str, 
+                                        contract_dicts:Sequence[Dict], 
+                                        contract_addresses:Optional[Dict[str,HexAddress]],
+                                        abi_str:str, 
+                                        superclass_module: str='abi_wrapper_contract',
+                                        superclass_name:str = 'ABIWrapperContract' ) -> str:
+    # If contract_addresses is None/null, this is a token contract like ERC20
+    # where the address of the token will be supplied as well as normal args, 
+    # so a custom contract will be made for each call. 
+    custom_contract = (contract_addresses is None)
+    address_str = '{}' if custom_contract else f'{contract_addresses}'
+
+    class_str = dedent(
+    f'''
+    from ..{superclass_module} import {superclass_name}
+    from ..solidity_types import *
+    from ..credentials import Credentials
+    
+    CONTRACT_ADDRESS = {address_str}
+
+    ABI = """[
+    {abi_str}
+    ]
+    """     
+
+    class {inflection.camelize(contract_name)}({superclass_name}):
+
+        def __init__(self, chain_key:str, rpc:str=None):
+            contract_address = CONTRACT_ADDRESS.get(chain_key)
+            super().__init__(contract_address=contract_address, abi=ABI, rpc=rpc)
+    ''')
+    func_strs = [function_body(d, custom_contract) for d in contract_dicts]
+    # remove empty strs
+    func_strs = [f for f in func_strs if f]
+
+    class_str += f'\n'.join(func_strs)
+    return class_str
 
 def python_class_str_for_contract_dicts(contract_name:str, 
                                         contract_dicts:Sequence[Dict], 
