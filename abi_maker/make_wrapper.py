@@ -87,22 +87,13 @@ def write_contract_wrapper_module(contract_name:str,
     abi_str = indent(abi_str, INDENT)
 
     superclass_module = to_snake_case(superclass_name)
-    # If we have one or more different addresses a contract could use, use
-    # a multichain version
-    if isinstance(contract_address, HexAddress):
-        module_str = python_class_str_for_contract_dicts(contract_name, 
-                                                    contract_dicts, 
-                                                    contract_address, 
-                                                    abi_str,
-                                                    superclass_module,
-                                                    superclass_name)
-    elif isinstance(contract_address, dict):
-        module_str = python_class_str_for_contract_dicts_multichain(contract_name, 
-                                                    contract_dicts, 
-                                                    contract_address, 
-                                                    abi_str,
-                                                    superclass_module,
-                                                    superclass_name)
+    module_str = python_class_str_for_contract_dicts(contract_name, 
+                                                contract_dicts, 
+                                                contract_address, 
+                                                abi_str,
+                                                superclass_module,
+                                                superclass_name)
+
 
     contract_path = (super_dir / to_snake_case(contract_name)).with_suffix('.py')
     contract_path.write_text(module_str)
@@ -199,18 +190,37 @@ def python_class_str_for_contract_dicts(contract_name:str,
                                         abi_str:str, 
                                         superclass_module: str='abi_wrapper_contract',
                                         superclass_name:str = 'ABIWrapperContract' ) -> str:
+    # There are two binary options for how we write contracts:
+    # - contract may or may not be multichain, in which CONTRACT_ADDRESS is written
+    #   as a dictionary rather than a single string, or
+    # - contract may or may not be for an ERC20-style token, where a custom address
+    #   is passed to every function call
+    # 
+    # We handle both circumstances below, but it's a little involved.    
+
+
     # If contract_address is None/null, this is a token contract like ERC20
     # where the address of the token will be supplied as well as normal args, 
     # so a custom contract will be made for each call. 
-    custom_contract = (contract_address is None)
-    address_str = 'None' if custom_contract else f'"{contract_address}"'
+    multichain = isinstance(contract_address, dict)
+    custom_contract = (contract_address is None or multichain and None in contract_address.values())
+
+    chain_type_arg = ''
+    contract_setter = ''
+    if multichain:
+        address_str = indent(json.dumps(contract_address, indent=4), '    ' )
+        address_str = address_str.replace('null', 'None')
+        chain_type_arg = 'chain_key:str, '
+        contract_setter = '.get(chain_key)'
+    else:
+        address_str = 'None' if custom_contract else f'"{contract_address}"'
 
     class_str = dedent(
     f'''
     from ..{superclass_module} import {superclass_name}
     from ..solidity_types import *
     from ..credentials import Credentials
-    
+
     CONTRACT_ADDRESS = {address_str}
 
     ABI = """[
@@ -220,8 +230,9 @@ def python_class_str_for_contract_dicts(contract_name:str,
 
     class {inflection.camelize(contract_name)}({superclass_name}):
 
-        def __init__(self, rpc:str=None):
-            super().__init__(contract_address=CONTRACT_ADDRESS, abi=ABI, rpc=rpc)
+        def __init__(self, {chain_type_arg}rpc:str=None):
+            contract_address = CONTRACT_ADDRESS{contract_setter}
+            super().__init__(contract_address=contract_address, abi=ABI, rpc=rpc)
     ''')
     func_strs = [function_body(d, custom_contract) for d in contract_dicts]
     # remove empty strs
@@ -229,42 +240,6 @@ def python_class_str_for_contract_dicts(contract_name:str,
 
     class_str += f'\n'.join(func_strs)
     return class_str
-
-def python_token_class_str_for_contract_dicts(contract_name:str, 
-                                        contract_dicts:Sequence[Dict], 
-                                        # contract_address:Optional[HexAddress],
-                                        abi_str:str, 
-                                        superclass_module: str='abi_wrapper_contract',
-                                        superclass_name:str = 'ABIWrapperContract' ):
-    # FIXME: if contract_address is None/null, this is a token contract like ERC20
-    # where the address of the token will be supplied as well as normal args, 
-    # so a custom contract will be made for each call. Make a couple small tweaks
-    # to enable this.
-    class_str = dedent(
-    f'''
-    from ..{superclass_module} import {superclass_name}
-    from ..solidity_types import *
-    from ..credentials import Credentials
-    from web3.contract import Contract
-    
-    ABI = """[
-    {abi_str}
-    ]
-    """     
-
-    class {inflection.camelize(contract_name)}({superclass_name}):
-
-        def __init__(self, rpc:str=None):
-            super().__init__(contract_address=None, abi=ABI, rpc=rpc)
-
-    ''')
-    # FIXME: does this 
-    func_strs = [function_body(d) for d in contract_dicts]
-    # remove empty strs
-    func_strs = [f for f in func_strs if f]
-
-    class_str += f'\n'.join(func_strs)
-    return class_str    
 
 def function_body(function_dict:Dict, custom_contract=False) -> str:
 
