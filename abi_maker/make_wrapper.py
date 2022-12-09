@@ -32,18 +32,19 @@ def main():
         ('DFK', PACKAGE_DIR / 'DFK_ABIS.json')
     ]
     for project_name, abi_json_path in projects:
-        written_paths = write_project_wrapper(project_name, abi_json_path)
+        written_paths = write_project_wrapper(project_name, abi_json_path, output_dir=PROJECTS_DIR)
         print(f'Wrote {project_name} wrapper contracts at:')
         for p in written_paths: 
             print(p)
 
-def write_project_wrapper(project_name:str, abi_json_path:Path) -> List[Path]:
+def write_project_wrapper(project_name:str, abi_json_path:Path, output_dir:Path) -> List[Path]:
     if not abi_json_path.exists():
         raise ValueError(f"No ABI file present for project {project_name} at expected path {abi_json_path}")
     abis_by_name = json.loads(abi_json_path.read_text())
 
+    # FIXME: warn before overwriting a dir?
     # Make project dir, erasing any previous dir
-    project_dir = PROJECTS_DIR / project_name
+    project_dir = output_dir / project_name
     if project_dir.exists():
         shutil.rmtree(project_dir)
     project_dir.mkdir(exist_ok=True)
