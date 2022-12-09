@@ -3,7 +3,7 @@ If you have a JSON ABI for a Web3 project and the address it's deployed at,
 ABI Maker will create a minimal Python wrapper for the contracts you specify. 
 
 You can generate the wrapper with something like:
-`abi_maker --project DFK --json DFK_ABIS.json`
+`make_abi_wrapper --project DFK --json DFK_ABIS.json`
 
 The created wrapper can then be used with:
 ```python
@@ -15,7 +15,19 @@ hero_tuple = cv.hero_core.get_hero(hero_id)
 ```
 
 ### Installation
-`pip install abi_maker`
+- *From PyPI (TODO, once released):* 
+  - `pip install abi_maker`
+
+- *From Github:*
+- (requires the [Poetry](https://python-poetry.org)) package manager
+```shell
+# (First, activate the virtualenv of your choice...)
+git clone git@github.com:Athiriyya/abi_maker.git
+cd abi_maker
+poetry install
+# make_abi_wrapper was added to your PATH
+```
+
 
 ### Wrapper Creation
 

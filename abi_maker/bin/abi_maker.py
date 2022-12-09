@@ -13,7 +13,7 @@ from typing import Dict, List, Optional, Sequence, Tuple, Union, Callable, Any
 def main():
     args = parse_all_args()
     
-    files_written = make_wrapper.write_project_wrapper( project_name=args.project_name, 
+    files_written = make_wrapper.write_project_wrapper( project_name=args.project, 
                                                         abi_json_path=args.json, 
                                                         output_dir=args.output)
     package_dir = args.output / args.project_name
@@ -32,7 +32,7 @@ def parse_all_args(args_in=None):
                 formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
     # Replace these with your arguments below
-    parser.add_argument( 'project_name', 
+    parser.add_argument( '--project', required=True,
         help='Name of project to create')
     parser.add_argument( '--json', '-j', type=int, required=True,
         help='JSON containing one or more contract ABIs and addresses. See README.md for schema.')
