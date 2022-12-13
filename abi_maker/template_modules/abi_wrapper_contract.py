@@ -49,7 +49,14 @@ class ABIWrapperContract:
         if self.contract_address:
             self.contract = self.w3.eth.contract(self.contract_address, abi=self.abi)
 
-    def get_nonce_and_update(self, address:address, force_fetch=False) -> int:
+    def get_nonce_and_update(self, address:address, force_fetch=True) -> int:
+        # FIXME: I think there's a bug in the caching logic below that lets
+        # nonces run ahead of where they should be and causes transactions to
+        # fail.
+        # So force_fetch is set to true, which fetches the appropriate nonce for
+        # every transaction
+        # - Athiriyya 13 December 2022
+
         # We keep track of our own nonce, and only re-fetch it if a 'nonce too low'
         # error gets thrown       
         nonce = self.nonces.get(address, 0) 
