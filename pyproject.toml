@@ -10,7 +10,7 @@ web3 = "^5.30.0"
 inflection = "^0.5.1"
 
 [tool.poetry.scripts]
-make_abi_wrapper = 'abi_maker.bin.abi_maker:main'
+make_abi_wrapper = 'abi_maker.bin.abi_maker_cli:main'
 
 [tool.poetry.dev-dependencies]
 pytest = "^5.2"

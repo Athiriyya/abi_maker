@@ -5,7 +5,7 @@ import os
 import sys
 from pathlib import Path
 
-from .. import make_wrapper
+from abi_maker import make_wrapper
 
 from typing import Dict, List, Optional, Sequence, Tuple, Union, Callable, Any
 
@@ -16,7 +16,7 @@ def main():
     files_written = make_wrapper.write_project_wrapper( project_name=args.project, 
                                                         abi_json_path=args.json, 
                                                         output_dir=args.output)
-    package_dir = args.output / args.project_name
+    package_dir = args.output / args.project
     print(f'Wrote {len(files_written)} files to {package_dir}')
 
 
@@ -34,7 +34,7 @@ def parse_all_args(args_in=None):
     # Replace these with your arguments below
     parser.add_argument( '--project', required=True,
         help='Name of project to create')
-    parser.add_argument( '--json', '-j', type=int, required=True,
+    parser.add_argument( '--json', '-j', type=Path, required=True,
         help='JSON containing one or more contract ABIs and addresses. See README.md for schema.')
     # TODO: add default max gas, default bonus gas, default network name & rpc 
     # parser.add_argument()
