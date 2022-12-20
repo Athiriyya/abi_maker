@@ -33,7 +33,44 @@ poetry install
 
 ### Python Wrapper Use
 
-
 ### JSON Format
+Here's a loose schema for a project .JSON file:
+```json
+{
+  "PROJECT": "${YOUR_PROJECT_NAME}",
+  "DEFAULT_RPC": {
+    "${NETWORK_TAG_A}": "${SOME_URL}",
+    "${NETWORK_TAG_B}": "${OTHER_URL}"
+  }
+  "CONTRACTS":{
+    "${CONTRACT_NAME}": {
+      "ABI": [
+        ${ABI_JSON_HERE}
+      ],
+      "ADDRESS": {
+        "${NETWORK_TAG_A}": "${SOME_0X}",
+        "${NETWORK_TAG_B}": "${OTHER_0X}",
+      } 
+    }
+  }
+}
+```
+
+Note that, for single-network contracts, the values of "DEFAULT_RPC" and "ADDRESS"
+may be single values rather than dictionaries. [Defi Kingdoms](https://defikingdoms.com/), as a multi-chain project, has: 
+```json
+  "DEFAULT_RPC": {
+      "cv": "https://subnets.avax.network/defi-kingdoms/dfk-chain/rpc",
+      "sd": "https://klaytn.rpc.defikingdoms.com/"
+  },
+```
+
+While [The Beacon](https://www.thebeacon.gg/), only on Arbitrum, has:
+```json
+  "DEFAULT_RPC": "https://arb1.arbitrum.io/rpc"
+```
+
+
+
 
 ### Alternate Superclasses

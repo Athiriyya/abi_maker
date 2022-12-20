@@ -32,7 +32,7 @@ def parse_all_args(args_in=None):
                 formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
     # Replace these with your arguments below
-    parser.add_argument( '--project', required=True,
+    parser.add_argument( '--project', '-p', required=True,
         help='Name of project to create')
     parser.add_argument( '--json', '-j', type=Path, required=True,
         help='JSON containing one or more contract ABIs and addresses. See README.md for schema.')

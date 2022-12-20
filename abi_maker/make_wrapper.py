@@ -1,12 +1,10 @@
 #! /usr/bin/env python
-
-import argparse
-from textwrap import indent, dedent
 import json
 import keyword
 from pathlib import Path
 import re
 import shutil
+from textwrap import indent, dedent
 
 import inflection
 
@@ -14,29 +12,21 @@ from typing import Dict, List, Optional, Sequence, Tuple, Union, Callable, Any
 
 HexAddress = str
 
-
-
 INDENT = '    ' # 4 spaces. Changeable if you're a barbarian
+
 PACKAGE_DIR = Path(__file__).parent
 TEMPLATES_DIR = PACKAGE_DIR / 'template_modules'
-PROJECTS_DIR = PACKAGE_DIR / 'projects'
-PROJECTS_DIR.mkdir(exist_ok=True)
 
 SNAKE_CASE_RE_1 = re.compile(r'(.)([A-Z][a-z]+)')
 SNAKE_CASE_RE_2 = re.compile(r'([a-z0-9])([A-Z])')
 
-def main():
-    # args = parse_all_args()
-    projects = [
-        ('Evo', PACKAGE_DIR / 'EVO_ABIS.json'),
-        ('DFK', PACKAGE_DIR / 'DFK_ABIS.json')
-    ]
-    for project_name, abi_json_path in projects:
-        written_paths = write_project_wrapper(project_name, abi_json_path, output_dir=PROJECTS_DIR)
-        print(f'Wrote {project_name} wrapper contracts at:')
-        for p in written_paths: 
-            print(p)
+# FIXME: Function polymorphism is legal in Solidity but not in Python. 
+# How should we deal with this issue?
+# (e.g. having two functions, with the same name but different arguments A(arg1) & A(arg2, arg3) )
 
+# ===============
+# = ENTRY POINT =
+# ===============
 def write_project_wrapper(project_name:str, abi_json_path:Path, output_dir:Path) -> List[Path]:
     if not abi_json_path.exists():
         raise ValueError(f"No ABI file present for project {project_name} at expected path {abi_json_path}")
@@ -50,25 +40,35 @@ def write_project_wrapper(project_name:str, abi_json_path:Path, output_dir:Path)
     project_dir.mkdir(exist_ok=True)
 
     # Copy template modules into project dir
-    [shutil.copy(temp, project_dir / temp.name) for temp in TEMPLATES_DIR.iterdir()]
+    [shutil.copy(template, project_dir / template.name) for template in TEMPLATES_DIR.iterdir()]
 
     # TODO: Customize superclass module; set default RPC, add anything else that's needed
 
-    module_paths = write_classes_for_abis(project_name, abis_by_name)
-    all_contracts_path = write_all_contracts_wrapper(project_name, abis_by_name, module_paths)
+    # Write a module for each contract in the JSON file
+    module_paths = write_classes_for_abis(project_name, abis_by_name, project_dir)
+
+    # Write a single class that imports & initializes all contract instances with specified RPC, etc
+    # This is what a user will import & use
+    all_contracts_path = write_all_contracts_wrapper(project_name, abis_by_name, module_paths, project_dir)
+
+    # Write the ABI file to the package so there's evidence of how things were generated.
+    shutil.copy(abi_json_path, project_dir / abi_json_path.name)
+
     return module_paths + [all_contracts_path]
 
 def write_classes_for_abis( project_name:str, 
-                            abis_by_name: Dict[str, Dict] ) -> List[Path]:
+                            project_dict: Dict[str, Dict],
+                            project_dir:Path ) -> List[Path]:
     written_paths:List[Path] = []
 
-    contracts_dir = PROJECTS_DIR / project_name / 'contracts'
+    contracts_dir =  project_dir / 'contracts'
+    
     contracts_dir.mkdir(exist_ok=True, parents=True)
 
     # TODO: we might make some provisions for a customizable superclass    
     # superclass_name = f'{project_name.capitalize()}Contract'
     superclass_name = 'ABIWrapperContract'
-    for contract_name, contract_info in abis_by_name.items():
+    for contract_name, contract_info in project_dict['CONTRACTS'].items():
         # Note that this address may be a single hex address or a dict of addresses
         # for multi-chain contracts
         address = contract_info.get('ADDRESS')
@@ -101,11 +101,13 @@ def write_contract_wrapper_module(contract_name:str,
     return contract_path
 
 def write_all_contracts_wrapper(project_name:str, 
-                                contract_dicts:Sequence[Dict], 
-                                contract_paths:Sequence[Path]) -> Path:
+                                project_dict:Dict, 
+                                contract_paths:Sequence[Path],
+                                project_dir:Path) -> Path:
     init_strs = []
     import_strs = []
 
+    contract_dicts = project_dict['CONTRACTS']
     # Figure out if this is a multichain contract
     single_dict = next(iter(contract_dicts.values()))
     is_multichain = isinstance(single_dict.get('ADDRESS'), dict)
@@ -117,6 +119,7 @@ def write_all_contracts_wrapper(project_name:str,
         chain_type_arg = 'chain_key:str, '
         chain_self = '\n        self.chain_key = chain_key'
 
+    default_rpc = project_dict.get('DEFAULT_RPC', None)
 
     for class_name, module_path in zip(contract_dicts.keys(), contract_paths):
         module_name = module_path.stem
@@ -125,17 +128,28 @@ def write_all_contracts_wrapper(project_name:str,
 
     imports = '\n'.join(import_strs)
     inits = '\n'.join(init_strs)
+    default_rpc_declaration = ''
+    default_rpc_setting = ''
+    if default_rpc:
+        if isinstance(default_rpc, dict): 
+            rpc_str = json_nest_dict_to_depth(default_rpc, 1)
+            default_rpc_setting = ' or DEFAULT_RPC[chain_key]'
+        else:
+            rpc_str = f'"{default_rpc}"'
+            default_rpc_setting = ' or DEFAULT_RPC'
+        default_rpc_declaration = f'\nDEFAULT_RPC = {rpc_str}'
 
     class_str = dedent(
 f'''
 #! /usr/bin/env python
 
 {imports}
+{default_rpc_declaration}
 
 class All{project_name.capitalize()}Contracts:
     # TODO: we might want to be able to specify other traits, like gas fees or timeout
-    def __init__(self, {chain_type_arg}rpc:str=None):   
-        self.rpc = rpc{chain_self}
+    def __init__(self, {chain_type_arg}rpc:str=None):
+        self.rpc = rpc{default_rpc_setting}{chain_self}
 
 {inits}
 
@@ -143,47 +157,9 @@ class All{project_name.capitalize()}Contracts:
 )
 
     
-    all_contract_path = PROJECTS_DIR / project_name / f'all_{project_name.lower()}_contracts.py'
+    all_contract_path = project_dir / f'all_{project_name.lower()}_contracts.py'
     all_contract_path.write_text(class_str)
     return all_contract_path
-
-def python_class_str_for_contract_dicts_multichain(contract_name:str, 
-                                        contract_dicts:Sequence[Dict], 
-                                        contract_addresses:Optional[Dict[str,HexAddress]],
-                                        abi_str:str, 
-                                        superclass_module: str='abi_wrapper_contract',
-                                        superclass_name:str = 'ABIWrapperContract' ) -> str:
-    # If contract_addresses is None/null, this is a token contract like ERC20
-    # where the address of the token will be supplied as well as normal args, 
-    # so a custom contract will be made for each call. 
-    custom_contract = (contract_addresses is None)
-    address_str = '{}' if custom_contract else f'{contract_addresses}'
-
-    class_str = dedent(
-    f'''
-    from ..{superclass_module} import {superclass_name}
-    from ..solidity_types import *
-    from ..credentials import Credentials
-    
-    CONTRACT_ADDRESS = {address_str}
-
-    ABI = """[
-    {abi_str}
-    ]
-    """     
-
-    class {inflection.camelize(contract_name)}({superclass_name}):
-
-        def __init__(self, chain_key:str, rpc:str=None):
-            contract_address = CONTRACT_ADDRESS.get(chain_key)
-            super().__init__(contract_address=contract_address, abi=ABI, rpc=rpc)
-    ''')
-    func_strs = [function_body(d, custom_contract) for d in contract_dicts]
-    # remove empty strs
-    func_strs = [f for f in func_strs if f]
-
-    class_str += f'\n'.join(func_strs)
-    return class_str
 
 def python_class_str_for_contract_dicts(contract_name:str, 
                                         contract_dicts:Sequence[Dict], 
@@ -192,8 +168,8 @@ def python_class_str_for_contract_dicts(contract_name:str,
                                         superclass_module: str='abi_wrapper_contract',
                                         superclass_name:str = 'ABIWrapperContract' ) -> str:
     # There are two binary options for how we write contracts:
-    # - contract may or may not be multichain, in which CONTRACT_ADDRESS is written
-    #   as a dictionary rather than a single string, or
+    # - contract may or may not be multichain, in which case CONTRACT_ADDRESS 
+    #   is written as a dictionary rather than a single string, or
     # - contract may or may not be for an ERC20-style token, where a custom address
     #   is passed to every function call
     # 
@@ -387,47 +363,40 @@ def to_snake_case(name:str=None) -> str:
     name = SNAKE_CASE_RE_1.sub(r'\1_\2', name)
     return SNAKE_CASE_RE_2.sub(r'\1_\2', name).lower()
 
-def next_sibling_up_chain(elt):
-    # I'm dealing with some inscrutably nested divs, with ~15 levels of nesting
-    # for each row.
-    '''
-    <div>
-        <div>
-            <div>
-                <div interesting-tag-here></div>
-            </div>
-        </div>
-    </div>
-    <div>
-        <div>
-            <div>
-                <div other-tag-here></div>
-            </div>
-        </div>
-    </div>
-    
-    '''
-    # Given a node with 'interesting-tag-here', I want to look into the
-    # the next div valley. I'm calling this 'next_sibling_up_chain'
-    node = elt
-    sibling = None
-    while not sibling:
-        sibling = node.next_sibling
-        if not sibling:
-            node = node.parent
-    return sibling
-
 def is_role_func(d:Dict) -> bool:
-    # return ('role' in d.get('name', '') or d.get('name') == 'supportsInterface')    
     res = ('role' in d.get('name', '').lower() or d.get('name') == 'supportsInterface')    
-    if not res:
-        # print(f'is_role_func is False with dict: {d}')
-        pass
     return res
 
 # ===========================
 # = # DICT & ABI FORMATTING =
 # ===========================
+def write_abis_to_readable_file(abis:Dict[str, List[Dict]], abi_path:Path, exclude_role_funcs=True) -> Dict[str, List[Dict]]:
+    # Write ABI JSON out in a way designed to be human-readable, 
+    # neither all in one condensed line,
+    # nor with every struct indented so it's hard to see the whole 
+    # picture.
+    # That structure looks like:
+    # {
+    #     "abi_contract_1": [
+    #         {"dict_a": 1},
+    #         {"dict_b": 1}
+    #     ],
+
+    #     "abi_contract_2": [
+    #         {"etc": "etc"}
+    #     ]
+    # }
+    
+    # Also, order the entries in each ABI dict with name and type first
+    ordered_abis = {k:make_ordered_dict(v, exclude_role_funcs) for k,v in abis.items()}
+
+    out_str = '{\n' + ',\n\n'.join([f'"{k}":{one_dict_per_line(d)}' for k,d in ordered_abis.items()]) + '\n}'
+    # TODO: I think this is a better way to nest dicts, but would need to test a little
+    # out_str = json_nest_dict_to_depth(ordered_abis, flatten_after_level=3)
+    abi_path.write_text(out_str)  
+    print(f'Wrote ABI data to {abi_path}')
+    return ordered_abis
+
 def one_dict_per_line(dict_list:Sequence[Dict]) -> str:
     '''
     Render a list of dicts like so:
@@ -492,56 +461,3 @@ def make_ordered_dict(d: Union[List, Dict], exclude_role_funcs=True) -> Union[Li
 
     return new_dict
 
-def write_abis_to_readable_file(abis:Dict[str, List[Dict]], abi_path:Path, exclude_role_funcs=True) -> Dict[str, List[Dict]]:
-    # Write ABI JSON out in a way designed to be human-readable, 
-    # neither all in one condensed line,
-    # nor with every struct indented so it's hard to see the whole 
-    # picture.
-    # That structure looks like:
-    # {
-    #     "abi_contract_1": [
-    #         {"dict_a": 1},
-    #         {"dict_b": 1}
-    #     ],
-
-    #     "abi_contract_2": [
-    #         {"etc": "etc"}
-    #     ]
-    # }
-    
-    # Also, order the entries in each ABI dict with name and type first
-    ordered_abis = {k:make_ordered_dict(v, exclude_role_funcs) for k,v in abis.items()}
-
-    out_str = '{\n' + ',\n\n'.join([f'"{k}":{one_dict_per_line(d)}' for k,d in ordered_abis.items()]) + '\n}'
-    # TODO: I think this is a better way to nest dicts, but would need to test a little
-    # out_str = json_nest_dict_to_depth(ordered_abis, flatten_after_level=3)
-    abi_path.write_text(out_str)  
-    print(f'Wrote ABI data to {abi_path}')
-    return ordered_abis
-
-
-def parse_all_args(args_in=None):
-    ''' Set up argparser and return a namespace with named
-    values from the command line arguments.  
-    If help is requested (-h / --help) the help message will be printed 
-    and the program will exit.
-    '''
-    program_description = '''Generate mimimal-boilerplate Python wrappers for Web3 contracts'''
-
-    parser = argparse.ArgumentParser( description=program_description,
-                formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-
-    # Replace these with your arguments below
-    # parser.add_argument( 'positional', help='A positional argument')
-    # parser.add_argument( '-o', '--optional', type=int, help='An optional integer argument')
-
-    # # If no arguments were supplied, print help
-    # if len(sys.argv) == 1:
-    #     sys.argv.append('-h')
-
-    # If args_in isn't specified, args will be taken from sys.argv
-    args_namespace = parser.parse_args(args_in)
-    return args_namespace
-
-if __name__ == '__main__':
-    main()
