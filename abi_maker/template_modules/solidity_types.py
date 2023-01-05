@@ -1,5 +1,6 @@
 
 from typing import Sequence, Dict, Tuple
+from web3.datastructures import AttributeDict
 
 # We lose some detail here; Python doesnt have signed/unsigned int differentions
 # or bytes sizes. For now, these type aliase let us use Soliditys native types 
@@ -20,4 +21,4 @@ int256 = int
 bytes4 = bytes
 bytes32 = bytes
 
-TxReceipt = Dict # FIXME, we get this as an AttributeDict. But where's that defined?
+TxReceipt = AttributeDict 
