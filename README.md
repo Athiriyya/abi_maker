@@ -45,7 +45,7 @@ Here's a loose schema for a single-chain project .JSON file:
   "CONTRACTS":{
     "${CONTRACT_NAME}": {
       "ABI": [
-        ${ABI_JSON_HERE}
+        "${ABI_JSON_HERE}"
       ],
       "ADDRESS": "${SOME_0X}"
     }
@@ -64,7 +64,7 @@ And here's a multi-chain project file:
   "CONTRACTS":{
     "${CONTRACT_NAME}": {
       "ABI": [
-        ${ABI_JSON_HERE}
+        "${ABI_JSON_HERE}"
       ],
       "ADDRESS": {
         "${NETWORK_TAG_A}": "${SOME_0X}",
