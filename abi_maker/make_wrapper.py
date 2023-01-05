@@ -164,7 +164,6 @@ class All{project_name.capitalize()}Contracts:
 '''
 )
 
-    
     all_contract_path = project_dir / f'all_{project_name.lower()}_contracts.py'
     all_contract_path.write_text(class_str)
     return all_contract_path
