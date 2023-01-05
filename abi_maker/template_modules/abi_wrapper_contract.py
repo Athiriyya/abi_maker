@@ -138,13 +138,13 @@ class ABIWrapperContract:
         tx_receipt = self.w3.eth.get_transaction_receipt(tx_hash)
         return tx_receipt
 
-    def parse_events(self, tx_receipt:TxReceipt, names:Sequence[str]=None) -> Dict[str, AttributeDict]:
+    def parse_events(self, tx_receipt:TxReceipt, event_names:Sequence[str]=None) -> Dict[str, AttributeDict]:
         event_dicts = {}
         for event in self.contract.events:
             eds = event().processReceipt(tx_receipt, errors=web3.logs.DISCARD)
             if eds:
                 for ed in eds:
                     event_dicts.setdefault(ed.event,[]).append(ed)
-        if names:
-            event_dicts = {k:v for k,v in event_dicts.items() if k in names}
+        if event_names:
+            event_dicts = {k:v for k,v in event_dicts.items() if k in event_names}
         return event_dicts        
