@@ -21,22 +21,30 @@ SNAKE_CASE_RE_1 = re.compile(r'(.)([A-Z][a-z]+)')
 SNAKE_CASE_RE_2 = re.compile(r'([a-z0-9])([A-Z])')
 
 # FIXME: Function polymorphism is legal in Solidity but not in Python. 
-# How should we deal with this issue?
-# (e.g. having two functions, with the same name but different arguments A(arg1) & A(arg2, arg3) )
+# Having two functions, with the same name but different arguments A(arg1) & A(arg2, arg3) 
+# is fine in Solidity but in Python will silently fail and only the last function
+# will be valid.
+# Proposal: number any duplicate-named functions (e.g. A(arg1), A1(arg2, arg3))
 
 # ===============
 # = ENTRY POINT =
 # ===============
-def write_project_wrapper(project_name:str, abi_json_path:Path, output_dir:Path) -> List[Path]:
+def write_project_wrapper(project_name:str, abi_json_path:Path, output_dir:Path, overwrite_ok=False) -> List[Path]:
     if not abi_json_path.exists():
         raise ValueError(f"No ABI file present for project {project_name} at expected path {abi_json_path}")
     abis_by_name = json.loads(abi_json_path.read_text())
 
-    # FIXME: warn before overwriting a dir?
     # Make project dir, erasing any previous dir
+    # Warn before overwriting a dir. If overwrite_ok is True, proceed.
     project_dir = output_dir / project_name
     if project_dir.exists():
-        shutil.rmtree(project_dir)
+        overwrite_ok = overwrite_ok or yes_no_prompt(f'Overwrite project dir? ({project_dir})')
+        if overwrite_ok:
+            shutil.rmtree(project_dir)
+        else:
+            print(f'Refusing to overwrite project dir at {project_dir}. '
+                  f'\nMove the directory or pass the -f command line option to continue')
+            return []
     project_dir.mkdir(exist_ok=True)
 
     # Copy template modules into project dir
@@ -240,12 +248,9 @@ def function_body(function_dict:Dict, custom_contract=False) -> str:
     solidity_args = increment_empty_args(solidity_args, 'a')
     solidity_args_str = ', '.join(solidity_args)
 
-    #NOTE: make sure this covers all the bases we need. I'm assuming
-    # that the only other option for 'stateMutability' is 'nonpayable', but I haven't verified this
-    # - Athiriyya 21 November 2022
     is_view = function_dict['stateMutability'] in ('view', 'pure')
 
-    # We return 2 types of functions: contract function calls & transactions,
+    # We return 2 types of functions: contract function calls (views) & transactions,
     # and we return slightly different functions for standard contracts vs
     # currencies (like ERC20s) that create a contract object for each transaction
     def_func = function_signature(function_dict, custom_contract=custom_contract)
@@ -461,3 +466,13 @@ def make_ordered_dict(d: Union[List, Dict], exclude_role_funcs=True) -> Union[Li
 
     return new_dict
 
+# ===========
+# = HELPERS =
+# ===========
+def yes_no_prompt(prompt: str, default: bool = False) -> bool:
+    default_str = 'Y/n' if default else 'y/N'
+    res = input(f'{prompt} ({default_str}) ')
+    if len(res) == 0:
+        res = default_str
+    result = res.lower() in ('yes', 'y')
+    return result
