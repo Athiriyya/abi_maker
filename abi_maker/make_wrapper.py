@@ -26,6 +26,12 @@ SNAKE_CASE_RE_2 = re.compile(r'([a-z0-9])([A-Z])')
 # will be valid.
 # Proposal: number any duplicate-named functions (e.g. A(arg1), A1(arg2, arg3))
 
+# See also: https://web3py.readthedocs.io/en/v5/contracts.html#invoke-ambiguous-contract-functions-example
+# There's capacity to disambiguate functions based on their argument signatures,
+# but I'm not sure how to incorporate that into this project
+# - Athiriyya 12 January 2023
+
+
 # ===============
 # = ENTRY POINT =
 # ===============
@@ -156,7 +162,7 @@ f'''
 
 class All{project_name.capitalize()}Contracts:
     # TODO: we might want to be able to specify other traits, like gas fees or timeout
-    def __init__(self, {chain_type_arg}rpc:str=None):
+    def __init__(self, {chain_type_arg}rpc:str | None = None):
         self.rpc = rpc{default_rpc_setting}{chain_self}
 
 {inits}
@@ -170,7 +176,7 @@ class All{project_name.capitalize()}Contracts:
 
 def python_class_str_for_contract_dicts(contract_name:str, 
                                         contract_dicts:Sequence[Dict], 
-                                        contract_address:Optional[HexAddress],
+                                        contract_address:Union[None, HexAddress, Dict[str, HexAddress]],
                                         abi_str:str, 
                                         superclass_module: str='abi_wrapper_contract',
                                         superclass_name:str = 'ABIWrapperContract' ) -> str:
@@ -214,7 +220,7 @@ def python_class_str_for_contract_dicts(contract_name:str,
 
     class {inflection.camelize(contract_name)}({superclass_name}):
 
-        def __init__(self, {chain_type_arg}rpc:str=None):
+        def __init__(self, {chain_type_arg}rpc:str | None = None):
             contract_address = CONTRACT_ADDRESS{contract_setter}
             super().__init__(contract_address=contract_address, abi=ABI, rpc=rpc)
     ''')
@@ -358,7 +364,7 @@ def abi_type_to_hint(arg_dict:Dict) -> str:
 
     return type_out
 
-def to_snake_case(name:str=None) -> str:
+def to_snake_case(name:str | None = None) -> str:
     # See: https://stackoverflow.com/a/1176023/3592884
     # name = re.sub('(.)([A-Z][a-z]+)', r'\1_\2', name)
     # return re.sub('([a-z0-9])([A-Z])', r'\1_\2', name).lower()
@@ -422,7 +428,7 @@ def json_nest_dict_to_depth(elt:Union[Dict, List, Any], flatten_after_level=1, d
         kvs = indent(',\n'.join(kv_strings), INDENT)
         return f'{{\n{kvs}\n}}'
     elif isinstance(elt, (list, tuple)):
-        elts = [json_nest_dict_to_depth(e, flatten_after_level, depth+1) for e in elt]
+        elts = [str(json_nest_dict_to_depth(e, flatten_after_level, depth+1)) for e in elt]
         es = indent(',\n'.join(elts), INDENT)
         return f'[\n{es}\n]'
     else:
