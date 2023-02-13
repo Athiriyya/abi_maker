@@ -1,11 +1,11 @@
 [tool.poetry]
 name = "abi_maker"
-version = "0.1.0"
+version = "0.1.1"
 description = ""
 authors = ["Athiriyya <athiriyya@gmail.com>"]
 
 [tool.poetry.dependencies]
-python = "^3.9"
+python = "^3.10"
 web3 = "^5.30.0"
 inflection = "^0.5.1"
 
