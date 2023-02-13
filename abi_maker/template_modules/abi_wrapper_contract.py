@@ -4,7 +4,6 @@ import traceback
 
 import web3
 from web3 import Web3
-from web3.datastructures import AttributeDict
 from web3.middleware import geth_poa_middleware
 
 from .credentials import Credentials
@@ -100,11 +99,15 @@ class ABIWrapperContract:
     def send_transaction(self,
                          tx,
                          cred:Credentials,
-                         nonce=None
+                         extra_dict:Dict[str,Any] = None
                         ) -> Optional[TxReceipt]:
-
+        # Some transactions require extra information or fees when building 
+        # the transaction. e.g. bridging functions need a {'value': <bridge_fee_in_wei>}
+        # argument. If supplied, add that extra info
         address = cred.address  
         gas_dict = self.get_gas_dict_and_update(address)
+        if extra_dict:
+            gas_dict.update(extra_dict)
         tx_dict = tx.buildTransaction(gas_dict)    
         signed_tx = self.w3.eth.account.sign_transaction(tx_dict, private_key=cred.private_key)
         try:
