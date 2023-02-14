@@ -1,7 +1,8 @@
 
-from typing import Sequence, Dict, Tuple
+from typing import Sequence, Dict, Tuple, List
 from web3.datastructures import AttributeDict
-from web3.types import TxReceipt, ChecksumAddress
+from web3.types import TxReceipt
+from eth_typing.evm import ChecksumAddress
 
 # We lose some detail here; Python doesnt have signed/unsigned int differentions
 # or bytes sizes. For now, these type aliase let us use Solidity's native types 

@@ -80,14 +80,13 @@ def write_classes_for_abis( project_name:str,
     contracts_dir.mkdir(exist_ok=True, parents=True)
 
     # TODO: we might make some provisions for a customizable superclass    
-    # superclass_name = f'{project_name.capitalize()}Contract'
-    superclass_name = 'ABIWrapperContract'
+
     for contract_name, contract_info in project_dict['CONTRACTS'].items():
         # Note that this address may be a single hex address or a dict of addresses
         # for multi-chain contracts
         address = contract_info.get('ADDRESS')
         abi = contract_info['ABI']
-        path = write_contract_wrapper_module(contract_name, abi, address, superclass_name, contracts_dir)
+        path = write_contract_wrapper_module(contract_name, abi, address, contracts_dir)
         written_paths.append(path)
     
     return written_paths
@@ -95,18 +94,19 @@ def write_classes_for_abis( project_name:str,
 def write_contract_wrapper_module(contract_name:str, 
                                   contract_dicts:Sequence[Dict], 
                                   contract_address:Union[HexAddress, Dict[str, HexAddress]], 
-                                  superclass_name:str, 
                                   super_dir:Path) -> Path:
 
     abi_str = ',\n    '.join((json.dumps(d) for d in contract_dicts))
     abi_str = indent(abi_str, INDENT)
 
-    superclass_module = to_snake_case(superclass_name)
+    multichain = isinstance(contract_address, dict)
+    custom_contract = (contract_address is None or multichain and None in contract_address.values())
+
+    superclass_name = 'ABIMultiContractWrapper' if custom_contract else 'ABIContractWrapper' 
     module_str = python_class_str_for_contract_dicts(contract_name, 
                                                 contract_dicts, 
                                                 contract_address, 
                                                 abi_str,
-                                                superclass_module,
                                                 superclass_name)
 
 
@@ -137,6 +137,13 @@ def write_all_contracts_wrapper(project_name:str,
 
     for class_name, module_path in zip(contract_dicts.keys(), contract_paths):
         module_name = module_path.stem
+        address_desc = contract_dicts[class_name]['ADDRESS']
+        custom_contracts = ((is_multichain and not any(dict(address_desc).values()))
+                            or (not is_multichain and not address_desc))
+        # subclasses of AbiMultiContractWrapper (== ERC20, for now)
+        # don't have a chain key or contract as part of their args
+        chain_arg = '' if custom_contracts else 'self.chain_key, '
+
         import_strs.append(f'from .contracts.{module_name} import {class_name}')
         init_strs.append(indent(f'self.{module_name} = {class_name}({chain_arg}self.rpc)', INDENT*2))
 
@@ -178,8 +185,7 @@ def python_class_str_for_contract_dicts(contract_name:str,
                                         contract_dicts:Sequence[Dict], 
                                         contract_address:Union[None, HexAddress, Dict[str, HexAddress]],
                                         abi_str:str, 
-                                        superclass_module: str='abi_wrapper_contract',
-                                        superclass_name:str = 'ABIWrapperContract' ) -> str:
+                                        superclass_name:str = 'ABIContractWrapper' ) -> str:
     # There are two binary options for how we write contracts:
     # - contract may or may not be multichain, in which case CONTRACT_ADDRESS 
     #   is written as a dictionary rather than a single string, or
@@ -187,7 +193,7 @@ def python_class_str_for_contract_dicts(contract_name:str,
     #   is passed to every function call
     # 
     # We handle both circumstances below, but it's a little involved.    
-
+    superclass_module = to_snake_case(superclass_name)
 
     # If contract_address is None/null, this is a token contract like ERC20
     # where the address of the token will be supplied as well as normal args, 
@@ -200,10 +206,22 @@ def python_class_str_for_contract_dicts(contract_name:str,
     if multichain:
         address_str = indent(json.dumps(contract_address, indent=4), '    ' )
         address_str = address_str.replace('null', 'None')
-        chain_type_arg = 'chain_key:str, '
-        contract_setter = '.get(chain_key)'
+        if not custom_contract:
+            chain_type_arg = 'chain_key:str, '
+            contract_setter = 'contract_address = CONTRACT_ADDRESS[chain_key]'
     else:
         address_str = 'None' if custom_contract else f'"{contract_address}"'
+
+    custom_contract_init = dedent(f'''    def __init__(self, rpc:str):
+                super().__init__(abi=ABI, rpc=rpc)
+    ''')
+
+    fixed_contract_init = dedent(f'''    def __init__(self, {chain_type_arg}rpc:str):
+                {contract_setter}
+                super().__init__(contract_address=contract_address, abi=ABI, rpc=rpc)
+    ''')
+
+    init_str = custom_contract_init if custom_contract else fixed_contract_init
 
     class_str = dedent(
     f'''
@@ -219,11 +237,7 @@ def python_class_str_for_contract_dicts(contract_name:str,
     """     
 
     class {inflection.camelize(contract_name)}({superclass_name}):
-
-        def __init__(self, {chain_type_arg}rpc:str | None = None):
-            contract_address = CONTRACT_ADDRESS{contract_setter}
-            super().__init__(contract_address=contract_address, abi=ABI, rpc=rpc)
-    ''')
+        {init_str}''')
     func_strs = [function_body(d, custom_contract) for d in contract_dicts]
     # remove empty strs
     func_strs = [f for f in func_strs if f]
@@ -328,7 +342,7 @@ def function_signature(function_dict:Dict, custom_contract=False) -> str:
         if not arg_name:
             arg_name = substitute_arg_name
             substitute_arg_name = chr(ord(substitute_arg_name) + 1)
-        arg_type = abi_type_to_hint(arg_dict)
+        arg_type = abi_type_to_hint(arg_dict, is_output=False)
         inputs.append(f'{arg_name}:{arg_type}')
 
     inputs_str = ', '.join(inputs)
@@ -341,12 +355,12 @@ def get_output_types(outputs_list:Sequence[Dict]) -> str:
         return 'None'
     else:
         if len(outputs_list) == 1:
-            return abi_type_to_hint(outputs_list[0])
+            return abi_type_to_hint(outputs_list[0], is_output=True)
         else:
-            out_types_str = ', '.join([abi_type_to_hint(o) for o in outputs_list])
+            out_types_str = ', '.join([abi_type_to_hint(o, is_output=True) for o in outputs_list])
             return f'Tuple[{out_types_str}]'
 
-def abi_type_to_hint(arg_dict:Dict) -> str:
+def abi_type_to_hint(arg_dict:Dict, is_output=False) -> str:
     type_in = arg_dict['type']
     
     # Figure out if this is a (possibly nested) list type
@@ -360,7 +374,10 @@ def abi_type_to_hint(arg_dict:Dict) -> str:
     # Nest lists as needed
     type_out = type_in
     for i in range(list_depth):
-        type_out = f'Sequence[{type_out}]'
+        if is_output:
+            type_out = f'List[{type_out}]'
+        else:
+            type_out = f'Sequence[{type_out}]'
 
     return type_out
 
@@ -399,13 +416,12 @@ def write_abis_to_readable_file(abis:Dict[str, List[Dict]], abi_path:Path, exclu
     
     # Also, order the entries in each ABI dict with name and type first
     ordered_abis = {k:make_ordered_dict(v, exclude_role_funcs) for k,v in abis.items()}
-
-    out_str = '{\n' + ',\n\n'.join([f'"{k}":{one_dict_per_line(d)}' for k,d in ordered_abis.items()]) + '\n}'
+    out_str = '{\n' + ',\n\n'.join([f'"{k}":{one_dict_per_line(d)}' for k,d in ordered_abis.items()]) + '\n}' #type: ignore
     # TODO: I think this is a better way to nest dicts, but would need to test a little
     # out_str = json_nest_dict_to_depth(ordered_abis, flatten_after_level=3)
     abi_path.write_text(out_str)  
     print(f'Wrote ABI data to {abi_path}')
-    return ordered_abis
+    return ordered_abis # type:ignore
 
 def one_dict_per_line(dict_list:Sequence[Dict]) -> str:
     '''

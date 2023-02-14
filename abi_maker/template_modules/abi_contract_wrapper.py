@@ -4,7 +4,8 @@ import traceback
 
 import web3
 from web3 import Web3
-from web3.middleware import geth_poa_middleware
+from web3.middleware.geth_poa import geth_poa_middleware
+from web3.logs import DISCARD
 
 from .credentials import Credentials
 
@@ -18,17 +19,16 @@ DEFAULT_MAX_PRIORITY_GAS = 3
 
 W3_INSTANCES: Dict[str, Web3] = {}
 
-class ABIWrapperContract:
+class ABIContractWrapper:
     def __init__(self, 
-                 contract_address:Optional[address], 
+                 contract_address:str, 
                  abi:str,
                  rpc:str,
                  max_gas_gwei:float=DEFAULT_MAX_GAS,
                  max_priority_gwei:float=DEFAULT_MAX_PRIORITY_GAS):
         self.rpc = rpc
-        self.contract_address = contract_address
+        # self.contract_address = contract_address
         self.abi = abi
-        self.contract = None
         self.nonces: Dict[address, int] = {}
         self.timeout = DEFAULT_TIMEOUT
 
@@ -41,12 +41,12 @@ class ABIWrapperContract:
             w3.middleware_onion.inject(geth_poa_middleware, layer=0)
             W3_INSTANCES[self.rpc] = w3
         self.w3 = w3
+        self.contract_address = self.w3.toChecksumAddress(contract_address)
 
         self.max_gas_wei = self.w3.toWei(max_gas_gwei, 'gwei')
         self.max_priority_wei = self.w3.toWei(max_priority_gwei, 'gwei')
 
-        if self.contract_address:
-            self.contract = self.w3.eth.contract(self.contract_address, abi=self.abi)
+        self.contract = self.w3.eth.contract(self.contract_address, abi=self.abi)
 
     def get_nonce_and_update(self, address:address, force_fetch=True) -> int:
         # FIXME: I think there's a bug in the caching logic below that lets
@@ -66,7 +66,7 @@ class ABIWrapperContract:
         self.nonces[address] = nonce + 1
         return nonce
 
-    def get_gas_dict_and_update(self, address:address) -> Dict[str, float]:
+    def get_gas_dict_and_update(self, address:address) -> Dict[str, int]:
         nonce = self.get_nonce_and_update(address)
          
         legacy = False
@@ -74,12 +74,16 @@ class ABIWrapperContract:
             # TODO: it's expensive to query for fees with every transaction. 
             # Maybe query only once a minute?
             gas, gas_price = self.get_legacy_gas_fee()
-            gas_dict = {'gas': gas, 'gasPrice':gas_price, 'nonce':nonce}
+            gas_dict = {
+                'gas': gas, 
+                'gasPrice':gas_price, 
+                'nonce':nonce
+            }
         else:
             gas_dict = {
                 'from': address, 
-                'maxFeePerGas': self.max_gas_wei, 
-                'maxPriorityFeePerGas': self.max_priority_wei, 
+                'maxFeePerGas': int(self.max_gas_wei), 
+                'maxPriorityFeePerGas': int(self.max_priority_wei), 
                 'nonce': nonce
             }
         return gas_dict
@@ -88,7 +92,7 @@ class ABIWrapperContract:
         contract_func = getattr(self.contract, function_name)
         return contract_func(*args).call()
 
-    def get_custom_contract(self, contract_address:address, abi:str=None) -> Contract:
+    def get_custom_contract(self, contract_address:address, abi:str | None=None) -> Contract:
         # TODO: Many custom contracts for e.g. ERC20 tokens could
         # be re-used by caching a contracts dictionary keyed by address
         # For now, just return a new contract
@@ -99,8 +103,8 @@ class ABIWrapperContract:
     def send_transaction(self,
                          tx,
                          cred:Credentials,
-                         extra_dict:Dict[str,Any] = None
-                        ) -> Optional[TxReceipt]:
+                         extra_dict:Dict[str,Any] | None = None
+                        ) -> TxReceipt:
         # Some transactions require extra information or fees when building 
         # the transaction. e.g. bridging functions need a {'value': <bridge_fee_in_wei>}
         # argument. If supplied, add that extra info
@@ -117,9 +121,8 @@ class ABIWrapperContract:
             if 'nonce too low' in str(e):
                 nonce = self.get_nonce_and_update(address, force_fetch=True)
                 return self.send_transaction( tx, cred)
-
-            traceback.print_exc()
-            return None
+            # otherwise, raise
+            raise(e)
 
         receipt = self.w3.eth.wait_for_transaction_receipt(
             transaction_hash=signed_tx.hash,
@@ -141,10 +144,10 @@ class ABIWrapperContract:
         tx_receipt = self.w3.eth.get_transaction_receipt(tx_hash)
         return tx_receipt
 
-    def parse_events(self, tx_receipt:TxReceipt, event_names:Sequence[str]=None) -> Dict[str, AttributeDict]:
+    def parse_events(self, tx_receipt:TxReceipt, event_names:Sequence[str] | None = None) -> Dict[str, AttributeDict]:
         event_dicts = {}
-        for event in self.contract.events:
-            eds = event().processReceipt(tx_receipt, errors=web3.logs.DISCARD)
+        for event in self.contract.events: # type: ignore
+            eds = event().processReceipt(tx_receipt, errors=DISCARD)
             if eds:
                 for ed in eds:
                     event_dicts.setdefault(ed.event,[]).append(ed)
