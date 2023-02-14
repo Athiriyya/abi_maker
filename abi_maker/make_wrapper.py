@@ -289,7 +289,7 @@ def function_body(function_dict:Dict, custom_contract=False) -> str:
         if is_view:
             body = dedent(f'''
             {def_func}
-                return self.contract.functions.{contract_func_name}({solidity_args_str}).call()''')
+                return self.contract.functions.{contract_func_name}({solidity_args_str}).call(block_identifier=block_identifier)''')
         else:
             body = dedent(f'''
             {def_func}
@@ -344,6 +344,9 @@ def function_signature(function_dict:Dict, custom_contract=False) -> str:
             substitute_arg_name = chr(ord(substitute_arg_name) + 1)
         arg_type = abi_type_to_hint(arg_dict, is_output=False)
         inputs.append(f'{arg_name}:{arg_type}')
+
+    if not is_transaction:
+        inputs.append(f"block_identifier:BlockIdentifier = 'latest'")
 
     inputs_str = ', '.join(inputs)
 
