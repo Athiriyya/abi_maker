@@ -1,8 +1,4 @@
 #! /usr/bin/env python
-
-import traceback
-
-import web3
 from web3 import Web3
 from web3.middleware.geth_poa import geth_poa_middleware
 from web3.logs import DISCARD
