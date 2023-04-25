@@ -17,7 +17,8 @@ def main():
                                                         abi_json_path=args.json, 
                                                         output_dir=args.output,
                                                         overwrite_ok=args.force_overwrite)
-    package_dir = args.output / args.project
+    # package_dir = args.output / args.project
+    package_dir = args.output 
     print(f'Wrote {len(files_written)} files to {package_dir}')
 
 

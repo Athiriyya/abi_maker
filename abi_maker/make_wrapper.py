@@ -31,6 +31,8 @@ SNAKE_CASE_RE_2 = re.compile(r'([a-z0-9])([A-Z])')
 # but I'm not sure how to incorporate that into this project
 # - Athiriyya 12 January 2023
 
+# (What I've done so far is just to manually remove the ABI JSON for duplicate-named functions)
+
 
 # ===============
 # = ENTRY POINT =
@@ -42,7 +44,8 @@ def write_project_wrapper(project_name:str, abi_json_path:Path, output_dir:Path,
 
     # Make project dir, erasing any previous dir
     # Warn before overwriting a dir. If overwrite_ok is True, proceed.
-    project_dir = output_dir / project_name
+    # project_dir = output_dir / project_name
+    project_dir = output_dir 
     if project_dir.exists():
         overwrite_ok = overwrite_ok or yes_no_prompt(f'Overwrite project dir? ({project_dir})')
         if overwrite_ok:
