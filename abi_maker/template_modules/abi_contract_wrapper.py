@@ -109,7 +109,7 @@ class ABIContractWrapper:
         gas_dict = self.get_gas_dict_and_update(address)
         if extra_dict:
             gas_dict.update(extra_dict)
-        tx_dict = tx.buildTransaction(gas_dict)    
+        tx_dict = tx.build_transaction(gas_dict)    
         signed_tx = self.w3.eth.account.sign_transaction(tx_dict, private_key=cred.private_key)
         try:
             self.w3.eth.send_raw_transaction(signed_tx.rawTransaction)
@@ -144,7 +144,7 @@ class ABIContractWrapper:
     def parse_events(self, tx_receipt:TxReceipt, event_names:Sequence[str] | None = None) -> Dict[str, AttributeDict]:
         event_dicts = {}
         for event in self.contract.events: # type: ignore
-            eds = event().processReceipt(tx_receipt, errors=DISCARD)
+            eds = event().process_receipt(tx_receipt, errors=DISCARD)
             if eds:
                 for ed in eds:
                     event_dicts.setdefault(ed.event,[]).append(ed)
