@@ -6,7 +6,7 @@ authors = ["Athiriyya <athiriyya@gmail.com>"]
 
 [tool.poetry.dependencies]
 python = "^3.10"
-web3 = "^5.30.0"
+web3 = "^6.2.0"
 inflection = "^0.5.1"
 
 [tool.poetry.scripts]
