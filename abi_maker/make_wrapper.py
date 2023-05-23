@@ -20,6 +20,19 @@ TEMPLATES_DIR = PACKAGE_DIR / 'template_modules'
 SNAKE_CASE_RE_1 = re.compile(r'(.)([A-Z][a-z]+)')
 SNAKE_CASE_RE_2 = re.compile(r'([a-z0-9])([A-Z])')
 
+# These functions, from OpenZeppelin's Access Control libraries or related to 
+# Diamond storage, are not needed in the wrapper module. Unless there's a good 
+# reason, we should exclude them from wrappers
+INFRASTRUCTURE_FUNCTIONS = [
+    'Initialized', 'Paused', 'Unpaused', 
+    'initialize', 'paused', 'togglePause', 'unpause', 'pause', 
+    'DiamondCut', 
+    'diamondCut', 'facetAddress', 'facetAddresses', 'facetFunctionSelectors', 'facets',
+    'RoleAdminChanged', 'RoleGranted', 'RoleRevoked', 
+    'previousAdminRole', 'newAdminRole', 'getRoleAdmin', 'grantRole', 'hasRole', 
+    'renounceRole', 'revokeRole', 'supportsInterface',
+]
+
 # FIXME: Function polymorphism is legal in Solidity but not in Python. 
 # Having two functions, with the same name but different arguments A(arg1) & A(arg2, arg3) 
 # is fine in Solidity but in Python will silently fail and only the last function
@@ -126,7 +139,7 @@ def write_all_contracts_wrapper(project_name:str,
 
     contract_dicts = project_dict['CONTRACTS']
     # Figure out if this is a multichain contract
-    single_dict = next(iter(contract_dicts.values()))
+    single_dict:Dict = next(iter(contract_dicts.values()))
     is_multichain = isinstance(single_dict.get('ADDRESS'), dict)
     chain_arg = ''
     chain_type_arg = ''
@@ -396,9 +409,8 @@ def to_snake_case(name:str | None = None) -> str:
     name = SNAKE_CASE_RE_1.sub(r'\1_\2', name)
     return SNAKE_CASE_RE_2.sub(r'\1_\2', name).lower()
 
-def is_role_func(d:Dict) -> bool:
-    res = ('role' in d.get('name', '').lower() or d.get('name') == 'supportsInterface')    
-    return res
+def is_infra_func(d:Dict) -> bool:
+    return d.get('name') in INFRASTRUCTURE_FUNCTIONS
 
 # ===========================
 # = # DICT & ABI FORMATTING =
@@ -456,7 +468,7 @@ def json_nest_dict_to_depth(elt:Union[Dict, List, Any], flatten_after_level=1, d
     else:
         return json.dumps(elt)
 
-def make_ordered_dict(d: Union[List, Dict], exclude_role_funcs=True) -> Union[List, Dict]:
+def make_ordered_dict(d: Union[List, Dict], exclude_infra_funcs=True) -> Union[List, Dict]:
     # Given a dict or list of dicts, output a data structure with the same
     # contents, but with keys alphabetized and with the "name" field of any sub-dict
     # made first, so that ABI dicts are more easily readable.
@@ -471,10 +483,10 @@ def make_ordered_dict(d: Union[List, Dict], exclude_role_funcs=True) -> Union[Li
         return d
 
     if isinstance(d, list):
-        if exclude_role_funcs:
-            new_list = list([make_ordered_dict(d2, exclude_role_funcs) for d2 in d if not is_role_func(d2)])
+        if exclude_infra_funcs:
+            new_list = list([make_ordered_dict(d2, exclude_infra_funcs) for d2 in d if not is_infra_func(d2)])
         else:
-            new_list = list([make_ordered_dict(d2, exclude_role_funcs) for d2 in d])
+            new_list = list([make_ordered_dict(d2, exclude_infra_funcs) for d2 in d])
         # Sort list entries alphabetically. In practice, this ends up sorting by
         # method names, which has the side effect of separating Solidity events 
         # (which start with a capital letter) from Solidity functions
@@ -489,7 +501,7 @@ def make_ordered_dict(d: Union[List, Dict], exclude_role_funcs=True) -> Union[Li
         priorities_present = [k for k in priority_keys if k in keys]
         sorted_keys = priorities_present + sorted(to_sort)
 
-        new_dict = {k:make_ordered_dict(d[k], exclude_role_funcs) for k in sorted_keys}
+        new_dict = {k:make_ordered_dict(d[k], exclude_infra_funcs) for k in sorted_keys}
 
     return new_dict
 
